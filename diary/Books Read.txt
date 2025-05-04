@@ -1,0 +1,23 @@
+<h2>📚 My Reading Tracker</h2>
+
+<ol>
+  <li><b>रिच डैड पुअर डैड (रॉबर्ट कियोसाकी)</b> – 04/23 – 01/25 – 30–40%</li>
+  <li><b>The Power of Subconscious Mind (Joseph Murphy)</b> – 01/23 – 01/25 – 100%</li>
+  <li><b>How to Win Friends and Influence People (Dale Carnegie)</b> – 01/23 – 01/25 – 167/278 pages</li>
+  <li><b>The Psychology of Money (Morgan Housel)</b> – 01/23 – 01/25 – 100%</li>
+  <li><b>Zero to One (Peter Thiel)</b> – 01/01/25 – 22/01/25 – 100%</li>
+  <li><b>कर्मभूमि (प्रेमचंद)</b> – 09/01/25 – 24/01/25 – 100%</li>
+  <li><b>Sita: The Divine Mother (Rajendra Arun)</b> – 01/06/23 – 01/06/24 – 100%</li>
+  <li><b>गुनाहों का देवता (धर्मवीर भारती)</b> – 26/01/25 – 30/01/25 – 100%</li>
+  <li><b>The Lean Startup (Eric Ries)</b> – 25/01/25 – 10/03/25 – 100%</li>
+  <li><b>The Buddha and His Dhamma – Hindi Version (Japan, Dr. B. R. Ambedkar)</b> – 31/01/25 – ...</li>
+  <li><b>The Philosophy Book (DK)</b> – 01/01/25 – ...</li>
+  <li><b>Osho: The Book of Man</b> – 11/03/25 – 20/03/25 – 100%</li>
+  <li><b>The Upanishads (Eknath Easwaran)</b> – 22/03/25 – 08/04/25 – 100%</li>
+  <li><b>नहिं राम बिन ठांव (OSHO)</b> – 30/03/25 – 18/04/25 – 100%</li>
+  <li><b>Be As You Are – The Teachings of Ramana Maharshi (David Godman)</b> – 09/04/25 – ...</li>
+  <li><b>The Evolution of Desire (David M. Buss)</b> – 08/04/25 – ...</li>
+  <li><b>The Book of Mirdad – Hindi: किताब-ए-मीरदाद (Dr. Prem Mohindra, R. C. Bahal; Original: Mikhail Naimy)</b> – 19/04/25 – 03/05/25 – 100%</li>
+  <li><b>संभोग से समाधि की ओर (OSHO)</b> – 24/04/25 – ...</li>
+  <li><b>The Direct Path (Greg Goode)</b> – 03/05/25 – ...</li>
+</ol>
