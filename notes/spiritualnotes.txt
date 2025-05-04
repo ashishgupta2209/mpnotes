@@ -4,7 +4,8 @@
   <p><b>Definition:</b> A transaction is a transfer of a thing of value from one holder to another. <br>
   OR <br>
   A transaction is a value shift from one account to another that can be measured in monetary terms.</p>
-
+  <img
+<img src="img/Presentation1.png" alt="My Photo">
   <h3>Types of Accounting</h3>
   <ol>
     <li><b>Financial Accounting:</b> Financial accounting is accounting which deals with all financial transactions of a business in order to report the business's financial health. <br>
