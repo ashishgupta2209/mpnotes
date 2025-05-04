@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Document Reader</title> {/* Changed Title */}
+    <title>Collapsible Folder Reader</title>
     <style>
-        /* --- Configuration & Theming (CSS Variables - Copied from index.html) --- */
+        /* --- Configuration & Theming (CSS Variables - mostly unchanged) --- */
         :root {
             --primary-color: #2980b9;
             --secondary-color: #ecf0f1;
@@ -19,9 +19,9 @@
             --active-bg: #dde8f0; /* Lighter blue for active file */
             --folder-color: #555;
             --link-color: var(--primary-color);
-            --code-bg: #f0f0f0; /* Keep even if not used directly? */
-            --quote-border: #ccc; /* Keep even if not used directly? */
-            --quote-text: #555; /* Keep even if not used directly? */
+            --code-bg: #f0f0f0;
+            --quote-border: #ccc;
+            --quote-text: #555;
             --monospace-font: 'Consolas', 'Monaco', 'Courier New', monospace;
             --sans-serif-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             --base-font-size: 16px;
@@ -29,8 +29,6 @@
             --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.05);
             --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
             --transition-speed: 0.2s;
-            --nav-button-bg: #6c757d; /* Grey for back button */
-            --nav-button-hover-bg: #5a6268;
         }
 
         /* --- Reset & Base Styles --- */
@@ -49,86 +47,138 @@
             flex-grow: 1; padding: 30px; overflow-y: auto; background-color: var(--bg-color); position: relative;
         }
         /* --- Sidebar Headings --- */
-        #sidebar h2 {
+        #sidebar h2 { /* Main Title */
             font-size: 1.4em; font-weight: 600; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color);
             padding-bottom: 10px; margin-bottom: 20px;
         }
-        #sidebar h3 {
+        #sidebar h3 { /* Section Titles (Notes, Diary, PDFs) */
             font-size: 1.1em; font-weight: 600; margin: 20px 0 10px 0; color: #555;
             padding-bottom: 5px; border-bottom: 1px dashed var(--border-color);
         }
 
-        /* --- Navigation Link/Button --- */
-        .nav-link {
-            display: block;
-            padding: 10px 15px;
-            margin: 10px 0 25px 0; /* Adjusted spacing */
-            background-color: var(--nav-button-bg);
-            color: var(--text-light);
-            text-decoration: none;
-            text-align: center;
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            transition: background-color var(--transition-speed) ease;
-        }
-        .nav-link:hover {
-            background-color: var(--nav-button-hover-bg);
-        }
-        .nav-link::before { /* Optional icon */
-             content: '↩️'; /* Back arrow */
-             margin-right: 8px;
-         }
-
-        /* --- Tree View Styling (Only for PDFs/Folders) --- */
+        /* --- Tree View Styling --- */
         .tree-view ul {
-            list-style-type: none; padding-left: 18px; margin: 5px 0 0 0;
+            list-style-type: none;
+            padding-left: 18px; /* Indentation for nested levels */
+            margin: 5px 0 0 0; /* Top margin for nested list */
         }
-        .tree-view > ul { padding-left: 0; margin-top: 0; }
-        .tree-view li { padding: 0; margin: 1px 0; position: relative; }
-        /* Style applies to folder SPANs and PDF A tags */
+        /* Style top-level UL directly under .tree-view */
+        .tree-view > ul {
+             padding-left: 0; /* No indent for the root */
+             margin-top: 0;
+        }
+
+        .tree-view li {
+            padding: 0; /* Reset padding on LI */
+            margin: 1px 0; /* Compact vertical space */
+            position: relative; /* For positioning */
+        }
+
+        /* Styling for the clickable item (folder label or file link/span) */
         .tree-item {
-            display: flex; align-items: center; padding: 5px 8px; cursor: pointer;
-            border-radius: var(--border-radius); transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            font-size: 0.93em; color: var(--text-color); text-decoration: none; width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 5px 8px; /* Tighter padding */
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            transition: background-color var(--transition-speed) ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.93em; /* Slightly smaller font */
+            color: var(--text-color);
+            text-decoration: none;
+            width: 100%; /* Ensure it fills the LI */
         }
-        .tree-item:hover { background-color: var(--hover-bg); color: var(--text-color); }
-        /* Active state only for PDF links */
-        .tree-item.active {
-            background-color: var(--active-bg); color: var(--primary-color); font-weight: 500;
+
+        .tree-item:hover {
+            background-color: var(--hover-bg);
         }
-        .tree-item.active:hover { background-color: var(--active-bg); color: var(--primary-color); }
-        .folder-toggle {
-             display: inline-block; width: 16px; text-align: center; margin-right: 5px;
-             font-size: 0.7em; color: var(--folder-color); flex-shrink: 0;
-             transition: transform var(--transition-speed) ease; user-select: none;
+
+        .tree-item.active { /* Styling for selected FILE span/link */
+            background-color: var(--active-bg);
+            color: var(--primary-color);
+            font-weight: 500; /* Less bold */
         }
-         .folder-toggle::before { content: '▶'; display: inline-block; }
-        li.folder.open > .tree-item > .folder-toggle::before { transform: rotate(90deg); }
+
+        /* Toggle arrow/icon for FOLDERS */
+        .folder-toggle { /* The clickable area for the toggle */
+             display: inline-block;
+             width: 16px; /* Size of the arrow click area */
+             text-align: center;
+             margin-right: 5px;
+             font-size: 0.7em;
+             color: var(--folder-color);
+             flex-shrink: 0;
+             transition: transform var(--transition-speed) ease;
+             user-select: none; /* Prevent text selection on double click */
+        }
+         .folder-toggle::before {
+             content: '▶'; /* Default: collapsed */
+             display: inline-block;
+         }
+        li.folder.open > .tree-item > .folder-toggle::before {
+             transform: rotate(90deg); /* Expanded state */
+        }
+
+
+        /* Folder/File specific icons */
         .icon {
-             margin-right: 6px; font-size: 1.05em; flex-shrink: 0; width: 1.2em; text-align: center;
+             margin-right: 6px;
+             font-size: 1.05em;
+             flex-shrink: 0;
+             width: 1.2em; /* Ensure consistent icon width */
+             text-align: center; /* Center icon */
         }
-        /* Only keep icons used here */
-        .icon-folder::before { content: '📁'; color: #f39c12;}
-        .icon-pdf::before { content: '📎'; } /* PDF Icon */
+        .icon-folder { content: '📁'; color: #f39c12;}
+        .icon-note { content: '📝'; }
+        .icon-diary { content: '📔'; }
+        .icon-pdf { content: '📎'; }
+
+        /* File/Folder Text */
         .item-name {
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-grow: 1; /* Take remaining space */
         }
+
+        /* Hide nested lists by default */
         li.folder > ul { display: none; }
         li.folder.open > ul { display: block; }
 
-        /* --- Content Area Elements (File content area removed) --- */
-        #content-title { font-size: 1.6em; }
-        /* #file-content removed */
 
-        /* PDF Download Section Styles - Copied back */
-        #pdf-download-section {
-            display: none; /* Hide initially */
-            text-align: center; padding: 50px 20px; border: 1px solid var(--border-color);
+        /* --- Content Area Elements (unchanged) --- */
+        #content-title { font-size: 1.6em; /* Slightly smaller */ }
+        #file-content { /* (Styles for HTML content - unchanged) */
+            font-family: var(--sans-serif-font); font-size: 1em; line-height: 1.7;
+            word-wrap: break-word; margin-top: 10px; min-height: 200px; padding: 5px;
+        }
+        #file-content h1, #file-content h2, #file-content h3,
+        #file-content h4, #file-content h5, #file-content h6 {
+            margin-top: 1.3em; margin-bottom: 0.6em; font-weight: 600; line-height: 1.3; color: var(--primary-color); }
+        #file-content h1 { font-size: 1.8em; } #file-content h2 { font-size: 1.5em; } #file-content h3 { font-size: 1.3em; }
+        #file-content p { margin-bottom: 1.1em; }
+        #file-content ul, #file-content ol { margin-left: 1.8em; margin-bottom: 1.1em; }
+        #file-content li { margin-bottom: 0.5em; }
+        #file-content hr { border: none; border-top: 1px solid var(--border-color); margin: 2.5em 0; }
+        #file-content a { color: var(--link-color); text-decoration: underline; }
+        #file-content a:hover { color: #1f618d; }
+        #file-content b, #file-content strong { font-weight: bold; }
+        #file-content i, #file-content em { font-style: italic; }
+        #file-content u { text-decoration: underline; }
+        #file-content code { font-family: var(--monospace-font); background-color: var(--code-bg); color: #c7254e; padding: 0.2em 0.4em; border-radius: var(--border-radius); font-size: 0.9em; }
+        #file-content pre { display: block; padding: 1em; background-color: var(--code-bg); color: var(--text-color); border-radius: var(--border-radius); overflow-x: auto; margin-bottom: 1.1em; font-size: 0.9em; }
+        #file-content pre code { padding: 0; background: none; color: inherit; border-radius: 0; } /* Reset inline style within pre */
+        #file-content blockquote { margin: 1.5em 0 1.5em 1.5em; padding-left: 1em; border-left: 4px solid var(--quote-border); color: var(--quote-text); font-style: italic; }
+        #file-content img { max-width: 100%; height: auto; display: block; margin: 1.5em auto; border-radius: var(--border-radius); box-shadow: var(--shadow-light); }
+
+        #pdf-download-section { /* (unchanged) */
+            display: none; text-align: center; padding: 50px 20px; border: 1px solid var(--border-color);
             border-radius: var(--border-radius); background-color: var(--secondary-color); margin-top: 20px;
         }
-        #pdf-download-section p { color: var(--text-color); margin-bottom: 20px; font-size: 1.05em;}
-        #pdf-download-link {
+        #pdf-download-section p { color: var(--text-muted); margin-bottom: 20px; }
+        #pdf-download-link { /* (unchanged) */
              display: inline-block; padding: 12px 25px; font-size: 1.05em; font-weight: 500; color: var(--text-light);
              background-color: var(--primary-color); border-radius: var(--border-radius); text-decoration: none;
              transition: all var(--transition-speed) ease; box-shadow: var(--shadow-medium);
@@ -136,62 +186,67 @@
         #pdf-download-link:hover { background-color: #216ca0; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
         #pdf-download-link::before { content: '⬇️'; margin-right: 8px; }
 
-        /* --- Status & Loader --- */
-        #status-message {
+
+        /* --- Status & Loader (unchanged) --- */
+        #status-message { /* (unchanged) */
             font-size: 0.9em; font-style: italic; color: #6c757d; margin-top: auto;
             padding-top: 15px; border-top: 1px solid var(--border-color);
         }
-        #loader {
+        #loader { /* (unchanged) */
              position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); border: 5px solid var(--hover-bg);
              border-radius: 50%; border-top: 5px solid var(--primary-color); width: 40px; height: 40px;
              animation: spin 1s linear infinite; display: none; z-index: 10;
          }
         @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        /* --- Responsiveness --- */
-        /* (Media queries remain largely the same) */
-        @media (max-width: 900px) {
+        /* --- Responsiveness (unchanged) --- */
+        @media (max-width: 900px) { /* (unchanged) */
             #sidebar { width: 240px; } #content-area { padding: 20px; } #content-title { font-size: 1.5em; }
+             #file-content { font-size: 0.95em; }
          }
-        @media (max-width: 768px) {
+        @media (max-width: 768px) { /* (unchanged) */
             body { flex-direction: column; height: auto; overflow: auto; }
             #sidebar { width: 100%; height: auto; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--border-color); box-shadow: none; box-sizing: border-box; }
              #content-area { height: auto; flex-grow: 1; min-height: 55vh; }
              #status-message { margin-top: 15px; }
          }
-         @media (max-width: 480px) {
-             #sidebar { padding: 15px; max-height: 40vh; }
-             .tree-item { padding: 8px 10px; font-size: 0.85em;}
+        @media (max-width: 480px) { /* (unchanged) */
+            #sidebar { padding: 15px; max-height: 40vh; }
+             .file-list li, .file-list li a, .tree-item { padding: 8px 10px; font-size: 0.85em;} /* Adjusted tree item size */
              #sidebar h2 { font-size: 1.2em; margin-bottom: 15px; }
              #sidebar h3 { font-size: 1em; }
              #content-area { padding: 15px; }
              #content-title { font-size: 1.25em; }
+             #file-content { font-size: 0.9em; line-height: 1.65;}
              #pdf-download-link { padding: 10px 20px; font-size: 1em;}
          }
+
     </style>
 </head>
 <body>
     <aside id="sidebar">
-        <h2>PDF Documents</h2> {/* Changed Title */}
+        <h2>My Files</h2>
 
-        <!-- Navigation Link back to index -->
-        <a href="./index.html" class="nav-link">View Notes & Diary</a>
+        <h3>Notes</h3>
+        <div id="notes-tree" class="tree-view"><ul><li>Loading Notes...</li></ul></div>
+
+        <h3>Diary</h3>
+        <div id="diary-tree" class="tree-view"><ul><li>Loading Diary...</li></ul></div>
 
         <h3>PDFs</h3>
         <div id="pdfs-tree" class="tree-view"><ul><li>Loading PDFs...</li></ul></div>
-
-        {/* Notes & Diary sections REMOVED */}
 
         <div id="status-message">Initializing...</div>
     </aside>
 
     <main id="content-area">
-        <div id="loader"></div>
-        <h1 id="content-title">Select PDF</h1> {/* Changed Title */}
+        <div id="loader"></div> <!-- Centered loader -->
+        <h1 id="content-title">Welcome!</h1>
 
-        {/* File Content Area REMOVED */}
+        <!-- Area to display text file content (DIV FOR HTML) -->
+        <div id="file-content">Select a note or diary entry to view its content.</div>
 
-        <!-- Area ONLY for PDF download link -->
+        <!-- Area for PDF download link -->
          <div id="pdf-download-section">
              <p>Select a PDF file from the sidebar to download.</p>
              <a id="pdf-download-link" href="#" download>Download PDF</a>
@@ -199,183 +254,195 @@
     </main>
 
     <script>
-        // --- DOM References (Notes/Diary/FileContent removed) ---
+        // --- DOM References ---
         const treeViewRoots = {
+             notes: document.getElementById('notes-tree').querySelector('ul'),
+             diary: document.getElementById('diary-tree').querySelector('ul'),
              pdfs: document.getElementById('pdfs-tree').querySelector('ul'),
         };
-        // fileContentElement removed
+        const fileContentElement = document.getElementById('file-content');
         const pdfDownloadSection = document.getElementById('pdf-download-section');
         const pdfDownloadLink = document.getElementById('pdf-download-link');
         const contentTitleElement = document.getElementById('content-title');
         const statusMessageElement = document.getElementById('status-message');
         const loaderElement = document.getElementById('loader');
 
-        const CSV_FILE_PATH = './filelist.csv'; // Uses the same CSV
-        let currentActiveTreeItem = null;
-        let fileDataCache = null;
+        const CSV_FILE_PATH = './filelist.csv';
+        let currentActiveTreeItem = null; // Tracks the highlighted tree-item SPAN/A
+        let fileDataCache = null; // Holds the hierarchical file tree
 
-        // --- Helper Functions (Unchanged) ---
+        // --- Helper Functions ---
         function getBaseFilename(filepath) {
+             // Added guard for null/undefined input
              if (!filepath) return '';
              return filepath.substring(filepath.lastIndexOf('/') + 1);
         }
 
+        // *** FUNCTION ADDED BACK ***
+        // Creates a readable title, optionally showing simplified path
         function formatDisplayTitle(filepath, type) {
-             if (!filepath) return 'Unknown File';
+             if (!filepath) return 'Unknown File'; // Guard added
              const baseFilename = getBaseFilename(filepath);
-             // Only remove .pdf extension here
-             let displayFilename = baseFilename.replace('.pdf', '').replace(/[_\-]/g, ' ');
+             // Basic cleanup - remove extensions, replace separators
+             let displayFilename = baseFilename.replace('.txt', '').replace('.pdf', '').replace(/[_\-]/g, ' ');
 
+             // Add part of the path for context if not in root category folder
              const parts = filepath.split('/');
-             if (parts.length > 2) {
-                 const subPath = parts.slice(1, -1).join(' › ');
+             if (parts.length > 2) { // e.g., notes/subfolder/file.txt (length 3)
+                 // Join the parts between the category root (index 0) and the filename (last index)
+                 const subPath = parts.slice(1, -1).join(' › '); // Use › as visual separator
                  displayFilename = `${subPath} › ${displayFilename}`;
              }
-             return displayFilename.trim() || baseFilename;
+             return displayFilename || baseFilename; // Fallback if cleanup makes it empty
          }
 
         function showLoader() { loaderElement.style.display = 'block'; }
         function hideLoader() { loaderElement.style.display = 'none'; }
         function updateStatus(message) { statusMessageElement.textContent = message; }
 
-        // --- Core Tree Building Logic (Modified to only include PDFs) ---
+        // --- Core Tree Building Logic ---
+        // (buildFileTree function remains the same as the previous "Collapsible Folder" answer)
         function buildFileTree(csvText) {
-             // Only includes pdfs
-             const tree = { pdfs: [] };
+             const tree = { notes: [], diary: [], pdfs: [] };
              const lines = csvText.trim().split('\n');
-             const header = lines[0]?.toLowerCase().trim();
-             const startIndex = (header === 'type,filepath' || header === '"type","filepath"') ? 1 : 0;
+             const startIndex = lines[0].toLowerCase().includes('type,filepath') ? 1 : 0;
 
              for (let i = startIndex; i < lines.length; i++) {
                  const line = lines[i].trim(); if (!line) continue;
                  const parts = line.split(',');
                   if (parts.length < 2) { console.warn(`Malformed CSV line ${i+1}: "${line}"`); continue; }
+
                   const type = parts[0].trim().toLowerCase();
-                  const filepath = parts.slice(1).join(',').trim().replace(/^"|"$/g, '');
-
-                  // --- FILTERING: Only process 'pdf' type ---
-                  if (type !== 'pdf') {
-                      // console.log(`Skipping non-pdf type "${type}" on pdf.html`); // Optional debug log
-                      continue; // Skip note, diary, and other types
-                  }
-                  // -------------------------------------------
-
-                  if (!filepath) { console.warn(`Missing filepath in CSV line ${i+1}: "${line}"`); continue; }
+                  const filepath = parts.slice(1).join(',').trim();
+                  if (!filepath || !tree.hasOwnProperty(type)) { console.warn(`Invalid type or filepath in CSV line ${i+1}`); continue; }
 
                   const pathSegments = filepath.split('/');
-                  if (pathSegments.length === 0 || pathSegments[0] !== type) {
-                    console.warn(`Filepath base folder mismatch in CSV line ${i+1}: Expected base '${type}', path '${filepath}'`); continue;
+                  if (pathSegments.length === 0 || pathSegments[0] !== type) { // Basic validation
+                    console.warn(`Filepath base folder mismatch or invalid path in CSV line ${i+1}: Expected base '${type}', path '${filepath}'`); continue;
                   }
 
-                 let currentLevel = tree[type]; // Will be tree.pdfs
+
+                 let currentLevel = tree[type]; // Start at the root array (notes, diary, or pdfs)
+                 // Iterate through folder segments (skip base folder, go up to filename)
                  for (let j = 1; j < pathSegments.length - 1; j++) {
                       const segmentName = pathSegments[j];
-                     if (!segmentName) continue;
+                     if (!segmentName) continue; // Skip empty segments potentially caused by double slashes
                      let folderNode = currentLevel.find(node => node.type === 'folder' && node.name === segmentName);
-                     if (!folderNode) {
+                     if (!folderNode) { // Folder doesn't exist, create it
                           folderNode = { name: segmentName, type: 'folder', children: [] };
                           currentLevel.push(folderNode);
-                          currentLevel.sort((a, b) => {
+                          currentLevel.sort((a, b) => { // Sort: folders first, then alpha
                               if (a.type === 'folder' && b.type !== 'folder') return -1;
                               if (a.type !== 'folder' && b.type === 'folder') return 1;
                               return a.name.localeCompare(b.name);
                            });
                       }
-                     currentLevel = folderNode.children;
+                     currentLevel = folderNode.children; // Descend
                   }
 
+                 // Add the file node
                  const filename = pathSegments[pathSegments.length - 1];
                  if (!filename) { console.warn(`Empty filename derived from CSV line ${i+1}: ${filepath}`); continue; }
 
-                 // Only creating nodes for pdf files/folders
-                 const fileNode = { name: filename, type: type, filepath: filepath };
+                 const fileNode = { name: filename, type: type, filepath: filepath }; // Store original type
                   currentLevel.push(fileNode);
-                  currentLevel.sort((a, b) => {
+                  currentLevel.sort((a, b) => { // Sort files at the current level
                       if (a.type === 'folder' && b.type !== 'folder') return -1;
                       if (a.type !== 'folder' && b.type === 'folder') return 1;
                        return a.name.localeCompare(b.name);
                    });
              }
-              console.log("Built File Tree (PDFs):", tree); // See only pdfs
+              console.log("Built File Tree:", tree);
              return tree;
          }
 
-        // --- Recursive Tree Rendering (Simplified for PDFs) ---
+        // --- Recursive Tree Rendering ---
+        // (renderTree function remains the same as the previous "Collapsible Folder" answer,
+        // ensure click handlers inside call the updated loadTextFile / displayPdfPrompt)
          function renderTree(nodes, parentElement) {
-            parentElement.innerHTML = '';
+            parentElement.innerHTML = ''; // Clear existing content
             if (!nodes || nodes.length === 0) {
-                 parentElement.innerHTML = '<li style="padding-left: 0; color: #6c757d; font-style: italic;">No PDF items found.</li>';
+                 parentElement.innerHTML = '<li style="padding-left: 0; color: var(--text-muted); font-style: italic;">No items.</li>';
                 return;
             }
 
              nodes.forEach(node => {
                  const li = document.createElement('li');
+                 const treeItem = document.createElement('span'); // Clickable element container
+                 treeItem.classList.add('tree-item');
+
                  const iconSpan = document.createElement('span');
                  iconSpan.classList.add('icon');
+
                  const nameSpan = document.createElement('span');
                  nameSpan.classList.add('item-name');
-                 nameSpan.textContent = node.name.replace('.pdf', ''); // Only .pdf relevant
+                  // Use base filename for display text within tree node
+                 nameSpan.textContent = node.name.replace('.txt','').replace('.pdf','');
 
-                 let treeItemElement; // Will be SPAN for folder, A for PDF file
-
-                 if (node.type === 'folder') {
+                if (node.type === 'folder') {
                      li.classList.add('folder');
-                     treeItemElement = document.createElement('span');
-                     treeItemElement.classList.add('tree-item', 'folder-item');
-                     iconSpan.classList.add('icon-folder');
+                     treeItem.classList.add('folder-item');
 
+                    // Add Toggle Element BEFORE Icon
                      const toggleSpan = document.createElement('span');
                      toggleSpan.classList.add('folder-toggle');
-                     treeItemElement.appendChild(toggleSpan);
-                     treeItemElement.appendChild(iconSpan);
-                     treeItemElement.appendChild(nameSpan);
+                     treeItem.appendChild(toggleSpan);
 
-                     treeItemElement.onclick = (e) => { e.stopPropagation(); li.classList.toggle('open'); };
-                     li.appendChild(treeItemElement);
+                    iconSpan.classList.add('icon-folder');
+                     treeItem.appendChild(iconSpan); // Icon after toggle
+                     treeItem.appendChild(nameSpan); // Name after icon
 
+                     // Click handler for Toggling folder
+                     treeItem.onclick = (e) => {
+                          e.stopPropagation(); // Important to prevent parent toggles
+                          li.classList.toggle('open');
+                      };
+                      li.appendChild(treeItem);
+
+                     // Recursively render children
                      const childrenUl = document.createElement('ul');
                      li.appendChild(childrenUl);
                      if (node.children && node.children.length > 0) {
-                          renderTree(node.children, childrenUl); // Recursively render folder contents
-                     } else {
-                          childrenUl.innerHTML = '<li style="padding-left: 10px; color: #6c757d; font-style: italic; font-size: 0.9em;">(Empty)</li>';
-                     }
-                 } else { // Must be a PDF file
-                     li.classList.add('file');
-                     treeItemElement = document.createElement('a'); // Use Anchor tag for PDF
-                     treeItemElement.classList.add('tree-item');
-                     treeItemElement.href = `./${node.filepath}`; // Direct link
-                     treeItemElement.download = node.name;       // Suggest download filename
+                          renderTree(node.children, childrenUl); // Recursive call
+                      } else {
+                          childrenUl.innerHTML = '<li style="padding-left: 0; color: var(--text-muted); font-style: italic; font-size: 0.9em;">Empty</li>'; // Placeholder for empty folder
+                      }
 
-                     iconSpan.classList.add(`icon-pdf`); // PDF icon
-                     treeItemElement.title = formatDisplayTitle(node.filepath, node.type);
+                } else { // File (note, diary, pdf)
+                      li.classList.add('file');
+                     treeItem.dataset.filepath = node.filepath;
+                     treeItem.dataset.type = node.type;
+                      // Use formatDisplayTitle for the tooltip to show context
+                     treeItem.title = formatDisplayTitle(node.filepath, node.type);
 
-                     const alignmentSpan = document.createElement('span');
-                     alignmentSpan.style.cssText = 'display: inline-block; width: 16px; flex-shrink: 0;';
-                     treeItemElement.appendChild(alignmentSpan);
-                     treeItemElement.appendChild(iconSpan);
-                     treeItemElement.appendChild(nameSpan);
+                     iconSpan.classList.add(`icon-${node.type}`); // Set correct file icon class
+                      // Add placeholder for alignment if needed, or style differently
+                      treeItem.appendChild(document.createElement('span')).style.cssText = 'display: inline-block; width: 16px; flex-shrink: 0;'; // Alignment space
+                      treeItem.appendChild(iconSpan);
+                     treeItem.appendChild(nameSpan);
 
-                     // PDF click handler
-                     treeItemElement.onclick = (e) => {
-                         e.preventDefault(); // Prevent default link action
+                      // Attach click handler for loading/downloading
+                     treeItem.onclick = (e) => {
                          e.stopPropagation();
-                         highlightActiveItem(treeItemElement);
-                         displayPdfPrompt(node.filepath); // Show download prompt in content area
-                     };
-                     li.appendChild(treeItemElement);
+                         highlightActiveItem(treeItem); // Highlight the clicked SPAN
+                          if (node.type === 'pdf') {
+                              displayPdfPrompt(node.filepath);
+                          } else {
+                              // Pass the node's original type (note/diary)
+                              loadTextFile(node.filepath, node.type);
+                          }
+                      };
+                     li.appendChild(treeItem);
                  }
                  parentElement.appendChild(li);
              });
          }
 
-        // Function to visually highlight the selected PDF item
         function highlightActiveItem(targetItemElement) {
             if (currentActiveTreeItem) {
                  currentActiveTreeItem.classList.remove('active');
              }
-             // Only highlight PDF links (A tags), not folder SPANs
-            if (targetItemElement && targetItemElement.tagName === 'A') {
+            if (targetItemElement && !targetItemElement.classList.contains('folder-item')) { // Only highlight files, not folders
                 targetItemElement.classList.add('active');
                 currentActiveTreeItem = targetItemElement;
             } else {
@@ -383,66 +450,93 @@
             }
          }
 
+
         // --- Content Loading Functions ---
-
-        // Function to display the PDF download prompt (Necessary here)
+        // displayPdfPrompt uses formatDisplayTitle now
         function displayPdfPrompt(filepath) {
-             // fileContentElement reference removed
-             pdfDownloadSection.style.display = 'block'; // Show download section
-
+             fileContentElement.style.display = 'none';
+             pdfDownloadSection.style.display = 'block';
              const baseFilename = getBaseFilename(filepath);
-             const displayTitle = formatDisplayTitle(filepath, 'pdf');
-
-             contentTitleElement.textContent = `PDF: ${displayTitle}`; // Update main title
-             pdfDownloadSection.querySelector('p').textContent = `Selected PDF: "${baseFilename}". Click below to download.`;
+             const displayTitle = formatDisplayTitle(filepath, 'pdf'); // Use the helper
+             contentTitleElement.textContent = `PDF: ${displayTitle}`; // Display formatted title
+             pdfDownloadSection.querySelector('p').textContent = `Selected PDF: "${filepath}".`; // Keep full path in description
              pdfDownloadLink.href = `./${filepath}`;
              pdfDownloadLink.download = baseFilename;
              pdfDownloadLink.textContent = `Download ${baseFilename}`;
-
-             hideLoader(); // Ensure loader is hidden if it was shown
-             updateStatus(`Ready to download: ${filepath}`);
+             hideLoader();
+             updateStatus(`Selected PDF: ${filepath}`);
         }
 
-        // loadTextFile function REMOVED - Not needed here
+        // loadTextFile uses formatDisplayTitle for the title
+        async function loadTextFile(filepath, type) {
+            contentTitleElement.textContent = `Loading...`;
+            fileContentElement.style.display = 'block';
+            pdfDownloadSection.style.display = 'none';
+            fileContentElement.innerHTML = ''; // Clear
+            showLoader();
+            updateStatus(`Loading ${filepath}...`);
 
-         // --- Main Initialization Function (Simplified for PDFs) ---
+            const path = `./${filepath}`; // Use full path
+            try {
+                 const response = await fetch(path, { cache: "no-store" });
+                 if (!response.ok) throw new Error(`Failed to load file: ${response.status} ${response.statusText} at '${path}'`);
+                 const textContent = await response.text();
+
+                 // Render HTML Content (SECURITY WARNING applies)
+                 fileContentElement.innerHTML = textContent;
+
+                 // Set the formatted title using the helper
+                 const displayTitle = formatDisplayTitle(filepath, type);
+                 contentTitleElement.textContent = displayTitle;
+
+                 updateStatus(`Loaded: ${filepath}.`);
+             } catch (error) {
+                 console.error('Error loading text file:', error);
+                 contentTitleElement.textContent = "Error Loading File";
+                 fileContentElement.innerHTML = `<p style="color:red;"><strong>Error:</strong> ${error.message}. Check file path and server.</p>`;
+                 updateStatus(`Error loading ${filepath}.`);
+                  highlightActiveItem(null); // De-select on error
+             } finally {
+                 hideLoader();
+             }
+         }
+
+
+         // --- Main initialization function (Remains largely the same) ---
          async function initializeReader() {
-             showLoader(); updateStatus('Fetching PDF list...');
-             // fileContentElement removed
-             pdfDownloadSection.style.display = 'none'; // Hide download section initially
-             contentTitleElement.textContent = 'Select PDF'; // Initial title
+             showLoader(); updateStatus('Fetching file list...');
+             fileContentElement.style.display = 'none';
+             pdfDownloadSection.style.display = 'none';
+             contentTitleElement.textContent = 'Welcome!'; // Reset welcome message
 
             try {
                  const response = await fetch(CSV_FILE_PATH, { cache: "no-store" });
                  if (!response.ok) throw new Error(`Failed to fetch ${CSV_FILE_PATH} (Status: ${response.status}).`);
                  const csvData = await response.text();
-                 // buildFileTree now only returns pdfs data
-                 fileDataCache = buildFileTree(csvData);
+                 fileDataCache = buildFileTree(csvData); // Build the hierarchical tree
 
-                 // Render only the PDF tree
+                 // Render the tree into the correct UL elements
+                 renderTree(fileDataCache.notes, treeViewRoots.notes);
+                 renderTree(fileDataCache.diary, treeViewRoots.diary);
                  renderTree(fileDataCache.pdfs, treeViewRoots.pdfs);
 
-                 // Local file warning logic remains the same
-                  if (!window.location.protocol.startsWith('http')) {
-                      updateStatus('Ready (CSV loaded). Note: Link clicks might need server.');
-                       if (!document.getElementById('local-warning')) {
-                           let warnDiv = document.createElement('div'); warnDiv.id = 'local-warning';
-                           warnDiv.style.cssText = 'color: #e67e22; margin-top: 15px; font-size: 0.85em; padding-top: 10px; border-top: 1px dashed #e67e22;';
-                           warnDiv.innerHTML = '<strong>Warning:</strong> Running from <code>file:///</code>. Use a <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server" target="_blank" rel="noopener noreferrer" style="color:inherit;">local server</a>.';
-                           document.getElementById('sidebar').appendChild(warnDiv);
+                  if (window.location.protocol.startsWith('http')) {
+                    updateStatus('Ready. Select a file.');
+                 } else { /* Add local warning */
+                      updateStatus('Ready (CSV loaded).');
+                      if (!document.getElementById('local-warning')) {
+                           let warnDiv = document.createElement('div'); warnDiv.id = 'local-warning'; warnDiv.style.cssText = 'color: #e67e22; margin-top: 15px; font-size: 0.85em;';
+                            warnDiv.innerHTML = '<strong>Note:</strong> Run via <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server" target="_blank" rel="noopener noreferrer">local server</a> for best results.';
+                            document.getElementById('sidebar').appendChild(warnDiv);
                        }
-                  } else {
-                       updateStatus('Ready. Select a PDF file.');
                   }
               } catch (error) {
                    console.error("Initialization failed:", error);
                    updateStatus(`Initialization Error! See console.`);
                    contentTitleElement.textContent = "Initialization Error";
-                   // Clear only pdfs list on error
-                   treeViewRoots.pdfs.innerHTML = '<li>Error loading list.</li>';
-                   // Show error message (maybe in the download section?)
-                   pdfDownloadSection.style.display = 'block';
-                   pdfDownloadSection.innerHTML = `<p style="color:var(--accent-color); font-weight:bold;">Failed to initialize reader.</p><p>Error: ${error.message}</p>`;
+                   Object.values(treeViewRoots).forEach(root => root.innerHTML = '<li>Error loading list.</li>');
+                   fileContentElement.style.display = 'block';
+                   fileContentElement.innerHTML = `<p style="color:red; font-weight:bold;">Failed to initialize reader.</p><p>Error: ${error.message}</p><p>Please check CSV format/path, file locations, and if local server is running.</p>`;
                } finally {
                     hideLoader();
                }
@@ -455,3 +549,15 @@
 
 </body>
 </html>
+
+Type,Filepath
+notes,notes/quick_idea.txt
+notes,notes/project_alpha/meeting_minutes.txt
+notes,notes/project_alpha/tasks.txt
+notes,notes/recipes/pasta_sauce.txt
+diary,diary/2023/2023-10-26_thoughts.txt
+diary,diary/2023/2023-11-15_event_recap.txt
+diary,diary/2024/2024-01-01_new_year.txt
+notes,notes/project_beta/planning/initial_spec.txt
+notes,notes/project_beta/planning/budget.txt
+pdf,pdfs/some_document.pdf 

@@ -1,0 +1,7 @@
+<h2>Important Learning Points 2</h2>
+
+<img src="img/3.jpg" >
+
+<img src="img/4.jpg" >
+
+<img src="img/5.jpg" >
