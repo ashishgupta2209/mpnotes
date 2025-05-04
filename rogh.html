@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Document Reader</title> {/* Changed Title */}
+    <style>
+        /* --- Configuration & Theming (CSS Variables - Copied from index.html) --- */
+        :root {
+            --primary-color: #2980b9;
+            --secondary-color: #ecf0f1;
+            --bg-color: #ffffff;
+            --sidebar-bg: #f8f9fa;
+            --text-color: #2c3e50;
+            --text-light: #ffffff;
+            --border-color: #dce4ec;
+            --accent-color: #e74c3c;
+            --hover-bg: #e9ecef;
+            --active-bg: #dde8f0; /* Lighter blue for active file */
+            --folder-color: #555;
+            --link-color: var(--primary-color);
+            --code-bg: #f0f0f0; /* Keep even if not used directly? */
+            --quote-border: #ccc; /* Keep even if not used directly? */
+            --quote-text: #555; /* Keep even if not used directly? */
+            --monospace-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+            --sans-serif-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --base-font-size: 16px;
+            --border-radius: 4px;
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.2s;
+            --nav-button-bg: #6c757d; /* Grey for back button */
+            --nav-button-hover-bg: #5a6268;
+        }
+
+        /* --- Reset & Base Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--sans-serif-font); font-size: var(--base-font-size); line-height: 1.6;
+            background-color: var(--secondary-color); color: var(--text-color); display: flex; height: 100vh; overflow: hidden;
+        }
+        /* --- Layout: Sidebar + Content --- */
+        #sidebar {
+            width: 300px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color);
+            padding: 20px; overflow-y: auto; display: flex; flex-direction: column;
+            transition: width var(--transition-speed) ease; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10;
+        }
+        #content-area {
+            flex-grow: 1; padding: 30px; overflow-y: auto; background-color: var(--bg-color); position: relative;
+        }
+        /* --- Sidebar Headings --- */
+        #sidebar h2 {
+            font-size: 1.4em; font-weight: 600; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+        #sidebar h3 {
+            font-size: 1.1em; font-weight: 600; margin: 20px 0 10px 0; color: #555;
+            padding-bottom: 5px; border-bottom: 1px dashed var(--border-color);
+        }
+
+        /* --- Navigation Link/Button --- */
+        .nav-link {
+            display: block;
+            padding: 10px 15px;
+            margin: 10px 0 25px 0; /* Adjusted spacing */
+            background-color: var(--nav-button-bg);
+            color: var(--text-light);
+            text-decoration: none;
+            text-align: center;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            transition: background-color var(--transition-speed) ease;
+        }
+        .nav-link:hover {
+            background-color: var(--nav-button-hover-bg);
+        }
+        .nav-link::before { /* Optional icon */
+             content: '↩️'; /* Back arrow */
+             margin-right: 8px;
+         }
+
+        /* --- Tree View Styling (Only for PDFs/Folders) --- */
+        .tree-view ul {
+            list-style-type: none; padding-left: 18px; margin: 5px 0 0 0;
+        }
+        .tree-view > ul { padding-left: 0; margin-top: 0; }
+        .tree-view li { padding: 0; margin: 1px 0; position: relative; }
+        /* Style applies to folder SPANs and PDF A tags */
+        .tree-item {
+            display: flex; align-items: center; padding: 5px 8px; cursor: pointer;
+            border-radius: var(--border-radius); transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 0.93em; color: var(--text-color); text-decoration: none; width: 100%;
+        }
+        .tree-item:hover { background-color: var(--hover-bg); color: var(--text-color); }
+        /* Active state only for PDF links */
+        .tree-item.active {
+            background-color: var(--active-bg); color: var(--primary-color); font-weight: 500;
+        }
+        .tree-item.active:hover { background-color: var(--active-bg); color: var(--primary-color); }
+        .folder-toggle {
+             display: inline-block; width: 16px; text-align: center; margin-right: 5px;
+             font-size: 0.7em; color: var(--folder-color); flex-shrink: 0;
+             transition: transform var(--transition-speed) ease; user-select: none;
+        }
+         .folder-toggle::before { content: '▶'; display: inline-block; }
+        li.folder.open > .tree-item > .folder-toggle::before { transform: rotate(90deg); }
+        .icon {
+             margin-right: 6px; font-size: 1.05em; flex-shrink: 0; width: 1.2em; text-align: center;
+        }
+        /* Only keep icons used here */
+        .icon-folder::before { content: '📁'; color: #f39c12;}
+        .icon-pdf::before { content: '📎'; } /* PDF Icon */
+        .item-name {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;
+        }
+        li.folder > ul { display: none; }
+        li.folder.open > ul { display: block; }
+
+        /* --- Content Area Elements (File content area removed) --- */
+        #content-title { font-size: 1.6em; }
+        /* #file-content removed */
+
+        /* PDF Download Section Styles - Copied back */
+        #pdf-download-section {
+            display: none; /* Hide initially */
+            text-align: center; padding: 50px 20px; border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); background-color: var(--secondary-color); margin-top: 20px;
+        }
+        #pdf-download-section p { color: var(--text-color); margin-bottom: 20px; font-size: 1.05em;}
+        #pdf-download-link {
+             display: inline-block; padding: 12px 25px; font-size: 1.05em; font-weight: 500; color: var(--text-light);
+             background-color: var(--primary-color); border-radius: var(--border-radius); text-decoration: none;
+             transition: all var(--transition-speed) ease; box-shadow: var(--shadow-medium);
+        }
+        #pdf-download-link:hover { background-color: #216ca0; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        #pdf-download-link::before { content: '⬇️'; margin-right: 8px; }
+
+        /* --- Status & Loader --- */
+        #status-message {
+            font-size: 0.9em; font-style: italic; color: #6c757d; margin-top: auto;
+            padding-top: 15px; border-top: 1px solid var(--border-color);
+        }
+        #loader {
+             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); border: 5px solid var(--hover-bg);
+             border-radius: 50%; border-top: 5px solid var(--primary-color); width: 40px; height: 40px;
+             animation: spin 1s linear infinite; display: none; z-index: 10;
+         }
+        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* --- Responsiveness --- */
+        /* (Media queries remain largely the same) */
+        @media (max-width: 900px) {
+            #sidebar { width: 240px; } #content-area { padding: 20px; } #content-title { font-size: 1.5em; }
+         }
+        @media (max-width: 768px) {
+            body { flex-direction: column; height: auto; overflow: auto; }
+            #sidebar { width: 100%; height: auto; max-height: 45vh; border-right: none; border-bottom: 1px solid var(--border-color); box-shadow: none; box-sizing: border-box; }
+             #content-area { height: auto; flex-grow: 1; min-height: 55vh; }
+             #status-message { margin-top: 15px; }
+         }
+         @media (max-width: 480px) {
+             #sidebar { padding: 15px; max-height: 40vh; }
+             .tree-item { padding: 8px 10px; font-size: 0.85em;}
+             #sidebar h2 { font-size: 1.2em; margin-bottom: 15px; }
+             #sidebar h3 { font-size: 1em; }
+             #content-area { padding: 15px; }
+             #content-title { font-size: 1.25em; }
+             #pdf-download-link { padding: 10px 20px; font-size: 1em;}
+         }
+    </style>
+</head>
+<body>
+    <aside id="sidebar">
+        <h2>PDF Documents</h2> {/* Changed Title */}
+
+        <!-- Navigation Link back to index -->
+        <a href="./index.html" class="nav-link">View Notes & Diary</a>
+
+        <h3>PDFs</h3>
+        <div id="pdfs-tree" class="tree-view"><ul><li>Loading PDFs...</li></ul></div>
+
+        {/* Notes & Diary sections REMOVED */}
+
+        <div id="status-message">Initializing...</div>
+    </aside>
+
+    <main id="content-area">
+        <div id="loader"></div>
+        <h1 id="content-title">Select PDF</h1> {/* Changed Title */}
+
+        {/* File Content Area REMOVED */}
+
+        <!-- Area ONLY for PDF download link -->
+         <div id="pdf-download-section">
+             <p>Select a PDF file from the sidebar to download.</p>
+             <a id="pdf-download-link" href="#" download>Download PDF</a>
+         </div>
+    </main>
+
+    <script>
+        // --- DOM References (Notes/Diary/FileContent removed) ---
+        const treeViewRoots = {
+             pdfs: document.getElementById('pdfs-tree').querySelector('ul'),
+        };
+        // fileContentElement removed
+        const pdfDownloadSection = document.getElementById('pdf-download-section');
+        const pdfDownloadLink = document.getElementById('pdf-download-link');
+        const contentTitleElement = document.getElementById('content-title');
+        const statusMessageElement = document.getElementById('status-message');
+        const loaderElement = document.getElementById('loader');
+
+        const CSV_FILE_PATH = './filelist.csv'; // Uses the same CSV
+        let currentActiveTreeItem = null;
+        let fileDataCache = null;
+
+        // --- Helper Functions (Unchanged) ---
+        function getBaseFilename(filepath) {
+             if (!filepath) return '';
+             return filepath.substring(filepath.lastIndexOf('/') + 1);
+        }
+
+        function formatDisplayTitle(filepath, type) {
+             if (!filepath) return 'Unknown File';
+             const baseFilename = getBaseFilename(filepath);
+             // Only remove .pdf extension here
+             let displayFilename = baseFilename.replace('.pdf', '').replace(/[_\-]/g, ' ');
+
+             const parts = filepath.split('/');
+             if (parts.length > 2) {
+                 const subPath = parts.slice(1, -1).join(' › ');
+                 displayFilename = `${subPath} › ${displayFilename}`;
+             }
+             return displayFilename.trim() || baseFilename;
+         }
+
+        function showLoader() { loaderElement.style.display = 'block'; }
+        function hideLoader() { loaderElement.style.display = 'none'; }
+        function updateStatus(message) { statusMessageElement.textContent = message; }
+
+        // --- Core Tree Building Logic (Modified to only include PDFs) ---
+        function buildFileTree(csvText) {
+             // Only includes pdfs
+             const tree = { pdfs: [] };
+             const lines = csvText.trim().split('\n');
+             const header = lines[0]?.toLowerCase().trim();
+             const startIndex = (header === 'type,filepath' || header === '"type","filepath"') ? 1 : 0;
+
+             for (let i = startIndex; i < lines.length; i++) {
+                 const line = lines[i].trim(); if (!line) continue;
+                 const parts = line.split(',');
+                  if (parts.length < 2) { console.warn(`Malformed CSV line ${i+1}: "${line}"`); continue; }
+                  const type = parts[0].trim().toLowerCase();
+                  const filepath = parts.slice(1).join(',').trim().replace(/^"|"$/g, '');
+
+                  // --- FILTERING: Only process 'pdf' type ---
+                  if (type !== 'pdf') {
+                      // console.log(`Skipping non-pdf type "${type}" on pdf.html`); // Optional debug log
+                      continue; // Skip note, diary, and other types
+                  }
+                  // -------------------------------------------
+
+                  if (!filepath) { console.warn(`Missing filepath in CSV line ${i+1}: "${line}"`); continue; }
+
+                  const pathSegments = filepath.split('/');
+                  if (pathSegments.length === 0 || pathSegments[0] !== type) {
+                    console.warn(`Filepath base folder mismatch in CSV line ${i+1}: Expected base '${type}', path '${filepath}'`); continue;
+                  }
+
+                 let currentLevel = tree[type]; // Will be tree.pdfs
+                 for (let j = 1; j < pathSegments.length - 1; j++) {
+                      const segmentName = pathSegments[j];
+                     if (!segmentName) continue;
+                     let folderNode = currentLevel.find(node => node.type === 'folder' && node.name === segmentName);
+                     if (!folderNode) {
+                          folderNode = { name: segmentName, type: 'folder', children: [] };
+                          currentLevel.push(folderNode);
+                          currentLevel.sort((a, b) => {
+                              if (a.type === 'folder' && b.type !== 'folder') return -1;
+                              if (a.type !== 'folder' && b.type === 'folder') return 1;
+                              return a.name.localeCompare(b.name);
+                           });
+                      }
+                     currentLevel = folderNode.children;
+                  }
+
+                 const filename = pathSegments[pathSegments.length - 1];
+                 if (!filename) { console.warn(`Empty filename derived from CSV line ${i+1}: ${filepath}`); continue; }
+
+                 // Only creating nodes for pdf files/folders
+                 const fileNode = { name: filename, type: type, filepath: filepath };
+                  currentLevel.push(fileNode);
+                  currentLevel.sort((a, b) => {
+                      if (a.type === 'folder' && b.type !== 'folder') return -1;
+                      if (a.type !== 'folder' && b.type === 'folder') return 1;
+                       return a.name.localeCompare(b.name);
+                   });
+             }
+              console.log("Built File Tree (PDFs):", tree); // See only pdfs
+             return tree;
+         }
+
+        // --- Recursive Tree Rendering (Simplified for PDFs) ---
+         function renderTree(nodes, parentElement) {
+            parentElement.innerHTML = '';
+            if (!nodes || nodes.length === 0) {
+                 parentElement.innerHTML = '<li style="padding-left: 0; color: #6c757d; font-style: italic;">No PDF items found.</li>';
+                return;
+            }
+
+             nodes.forEach(node => {
+                 const li = document.createElement('li');
+                 const iconSpan = document.createElement('span');
+                 iconSpan.classList.add('icon');
+                 const nameSpan = document.createElement('span');
+                 nameSpan.classList.add('item-name');
+                 nameSpan.textContent = node.name.replace('.pdf', ''); // Only .pdf relevant
+
+                 let treeItemElement; // Will be SPAN for folder, A for PDF file
+
+                 if (node.type === 'folder') {
+                     li.classList.add('folder');
+                     treeItemElement = document.createElement('span');
+                     treeItemElement.classList.add('tree-item', 'folder-item');
+                     iconSpan.classList.add('icon-folder');
+
+                     const toggleSpan = document.createElement('span');
+                     toggleSpan.classList.add('folder-toggle');
+                     treeItemElement.appendChild(toggleSpan);
+                     treeItemElement.appendChild(iconSpan);
+                     treeItemElement.appendChild(nameSpan);
+
+                     treeItemElement.onclick = (e) => { e.stopPropagation(); li.classList.toggle('open'); };
+                     li.appendChild(treeItemElement);
+
+                     const childrenUl = document.createElement('ul');
+                     li.appendChild(childrenUl);
+                     if (node.children && node.children.length > 0) {
+                          renderTree(node.children, childrenUl); // Recursively render folder contents
+                     } else {
+                          childrenUl.innerHTML = '<li style="padding-left: 10px; color: #6c757d; font-style: italic; font-size: 0.9em;">(Empty)</li>';
+                     }
+                 } else { // Must be a PDF file
+                     li.classList.add('file');
+                     treeItemElement = document.createElement('a'); // Use Anchor tag for PDF
+                     treeItemElement.classList.add('tree-item');
+                     treeItemElement.href = `./${node.filepath}`; // Direct link
+                     treeItemElement.download = node.name;       // Suggest download filename
+
+                     iconSpan.classList.add(`icon-pdf`); // PDF icon
+                     treeItemElement.title = formatDisplayTitle(node.filepath, node.type);
+
+                     const alignmentSpan = document.createElement('span');
+                     alignmentSpan.style.cssText = 'display: inline-block; width: 16px; flex-shrink: 0;';
+                     treeItemElement.appendChild(alignmentSpan);
+                     treeItemElement.appendChild(iconSpan);
+                     treeItemElement.appendChild(nameSpan);
+
+                     // PDF click handler
+                     treeItemElement.onclick = (e) => {
+                         e.preventDefault(); // Prevent default link action
+                         e.stopPropagation();
+                         highlightActiveItem(treeItemElement);
+                         displayPdfPrompt(node.filepath); // Show download prompt in content area
+                     };
+                     li.appendChild(treeItemElement);
+                 }
+                 parentElement.appendChild(li);
+             });
+         }
+
+        // Function to visually highlight the selected PDF item
+        function highlightActiveItem(targetItemElement) {
+            if (currentActiveTreeItem) {
+                 currentActiveTreeItem.classList.remove('active');
+             }
+             // Only highlight PDF links (A tags), not folder SPANs
+            if (targetItemElement && targetItemElement.tagName === 'A') {
+                targetItemElement.classList.add('active');
+                currentActiveTreeItem = targetItemElement;
+            } else {
+                currentActiveTreeItem = null;
+            }
+         }
+
+        // --- Content Loading Functions ---
+
+        // Function to display the PDF download prompt (Necessary here)
+        function displayPdfPrompt(filepath) {
+             // fileContentElement reference removed
+             pdfDownloadSection.style.display = 'block'; // Show download section
+
+             const baseFilename = getBaseFilename(filepath);
+             const displayTitle = formatDisplayTitle(filepath, 'pdf');
+
+             contentTitleElement.textContent = `PDF: ${displayTitle}`; // Update main title
+             pdfDownloadSection.querySelector('p').textContent = `Selected PDF: "${baseFilename}". Click below to download.`;
+             pdfDownloadLink.href = `./${filepath}`;
+             pdfDownloadLink.download = baseFilename;
+             pdfDownloadLink.textContent = `Download ${baseFilename}`;
+
+             hideLoader(); // Ensure loader is hidden if it was shown
+             updateStatus(`Ready to download: ${filepath}`);
+        }
+
+        // loadTextFile function REMOVED - Not needed here
+
+         // --- Main Initialization Function (Simplified for PDFs) ---
+         async function initializeReader() {
+             showLoader(); updateStatus('Fetching PDF list...');
+             // fileContentElement removed
+             pdfDownloadSection.style.display = 'none'; // Hide download section initially
+             contentTitleElement.textContent = 'Select PDF'; // Initial title
+
+            try {
+                 const response = await fetch(CSV_FILE_PATH, { cache: "no-store" });
+                 if (!response.ok) throw new Error(`Failed to fetch ${CSV_FILE_PATH} (Status: ${response.status}).`);
+                 const csvData = await response.text();
+                 // buildFileTree now only returns pdfs data
+                 fileDataCache = buildFileTree(csvData);
+
+                 // Render only the PDF tree
+                 renderTree(fileDataCache.pdfs, treeViewRoots.pdfs);
+
+                 // Local file warning logic remains the same
+                  if (!window.location.protocol.startsWith('http')) {
+                      updateStatus('Ready (CSV loaded). Note: Link clicks might need server.');
+                       if (!document.getElementById('local-warning')) {
+                           let warnDiv = document.createElement('div'); warnDiv.id = 'local-warning';
+                           warnDiv.style.cssText = 'color: #e67e22; margin-top: 15px; font-size: 0.85em; padding-top: 10px; border-top: 1px dashed #e67e22;';
+                           warnDiv.innerHTML = '<strong>Warning:</strong> Running from <code>file:///</code>. Use a <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server" target="_blank" rel="noopener noreferrer" style="color:inherit;">local server</a>.';
+                           document.getElementById('sidebar').appendChild(warnDiv);
+                       }
+                  } else {
+                       updateStatus('Ready. Select a PDF file.');
+                  }
+              } catch (error) {
+                   console.error("Initialization failed:", error);
+                   updateStatus(`Initialization Error! See console.`);
+                   contentTitleElement.textContent = "Initialization Error";
+                   // Clear only pdfs list on error
+                   treeViewRoots.pdfs.innerHTML = '<li>Error loading list.</li>';
+                   // Show error message (maybe in the download section?)
+                   pdfDownloadSection.style.display = 'block';
+                   pdfDownloadSection.innerHTML = `<p style="color:var(--accent-color); font-weight:bold;">Failed to initialize reader.</p><p>Error: ${error.message}</p>`;
+               } finally {
+                    hideLoader();
+               }
+          }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', initializeReader);
+
+    </script>
+
+</body>
+</html>

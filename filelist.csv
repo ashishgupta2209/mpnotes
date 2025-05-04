@@ -1,4 +1,4 @@
 type,filename
-note,spiritualnotes.txt
-diary,Books Read.txt
-diary,Rough while writing.txt
+diary,diary/Books Read.txt
+diary,diary/Rough while writing.txt
+notes,notes/Spiritual/spiritualnotes.txt

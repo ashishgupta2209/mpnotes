@@ -3,621 +3,809 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Local Reader - HTML Rendering</title>
+    <title>MpNotes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* --- Configuration & Theming (CSS Variables) --- */
+        /* --- Configuration & Theming --- */
         :root {
-            --primary-color: #2980b9; /* Slightly darker blue */
-            --secondary-color: #ecf0f1; /* Light grey */
-            --bg-color: #ffffff;
-            --sidebar-bg: #f8f9fa;
-            --text-color: #2c3e50; /* Darker text */
-            --text-light: #ffffff;
-            --border-color: #dce4ec; /* Lighter border */
-            --accent-color: #e74c3c; /* Red for attention/delete later? */
-            --hover-bg: #e9ecef;
-            --active-bg: var(--primary-color);
+            --primary-color: #2980b9; /* Existing blue */
+            --primary-hover: #2471a3; /* Darker blue for hover */
+            --primary-light: #a9cce3; /* Lighter blue for accents */
+            --secondary-color: #f0f2f5; /* Light grey body background */
+            --bg-color: #ffffff; /* Content background */
+            --sidebar-bg: #ffffff; /* Sidebar background */
+            --text-color: #34495e; /* Dark grey-blue text */
+            --text-light: #5d6d7e; /* Lighter text for meta, status */
+            --text-inverse: #ffffff; /* White text */
+            --border-color: #e1e4e8; /* Subtle border */
+            --border-darker: #d1d5da;
+            --accent-color: #e74c3c; /* Existing accent */
+            --hover-bg: #f6f8fa; /* Very light grey hover */
+            --active-bg: #e8f0fe; /* Light blue active */
+            --active-border: var(--primary-color); /* Blue border for active */
+            --folder-color: #586069; /* GitHub-ish folder grey */
             --link-color: var(--primary-color);
-            --code-bg: #f0f0f0;
-            --quote-border: #ccc;
-            --quote-text: #555;
-            --monospace-font: 'Consolas', 'Monaco', 'Courier New', monospace;
-            --sans-serif-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --base-font-size: 16px;
-            --border-radius: 4px;
-            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition-speed: 0.2s;
+            --code-bg: #f7f7f7; /* Lighter code background */
+            --code-text: #2c3e50;
+            --quote-border: var(--primary-light); /* Use light blue */
+            --quote-text: var(--text-light);
+            --monospace-font: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            --sans-serif-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+            --base-font-size: 15px; /* Slightly smaller base */
+            --border-radius: 5px; /* Slightly rounder */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+            --transition-speed: 0.15s;
+            --sidebar-width: 280px; /* Standardize width */
         }
 
-        /* --- Reset & Base Styles --- */
-        * {
-             box-sizing: border-box;
-             margin: 0;
-             padding: 0;
-         }
+        /* --- Scrollbar Styling (Optional, Webkit only) --- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--secondary-color); }
+        ::-webkit-scrollbar-thumb { background-color: var(--border-darker); border-radius: 10px; border: 2px solid var(--secondary-color); }
+        ::-webkit-scrollbar-thumb:hover { background-color: #a0a0a0; }
 
+
+        /* --- Reset & Base Styles --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: var(--sans-serif-font);
             font-size: var(--base-font-size);
-            line-height: 1.6;
+            line-height: 1.65;
             background-color: var(--secondary-color);
             color: var(--text-color);
             display: flex;
             height: 100vh;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-
         /* --- Layout: Sidebar + Content --- */
         #sidebar {
-            width: 300px; /* Slightly wider */
+            width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
-            padding: 20px;
+            padding: 20px 0 15px 0; /* Adjust padding */
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             transition: width var(--transition-speed) ease;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
             z-index: 10;
+            flex-shrink: 0;
         }
-
         #content-area {
             flex-grow: 1;
-            padding: 30px;
+            padding: 25px 35px; /* More padding */
             overflow-y: auto;
             background-color: var(--bg-color);
-            position: relative; /* For loader positioning */
+            position: relative;
         }
 
-        /* --- Sidebar Elements --- */
-        #sidebar h2 {
-            font-size: 1.4em;
+        /* --- Sidebar Headings --- */
+        #sidebar h2 { /* Main Title */
+            font-size: 1.15em;
             font-weight: 600;
             color: var(--primary-color);
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 20px 12px 20px;
+            margin: 0 0 15px 0; /* Remove top/bottom margin, add bottom */
         }
-        #sidebar h3 {
-            font-size: 1.1em;
+        #sidebar h3 { /* Section Titles (Notes, Diary) */
+            font-size: 0.75em; /* Smaller section titles */
             font-weight: 600;
-            margin: 20px 0 10px 0;
-            color: #555;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed var(--border-color);
-        }
-
-        .file-list {
-            list-style: none;
+            margin: 18px 20px 6px 20px; /* Adjust margins */
+            color: var(--text-light);
+            text-transform: uppercase; /* Uppercase */
+            letter-spacing: 0.5px; /* Spacing */
             padding: 0;
-            margin: 0 0 15px 0; /* Space below each list */
+            border: none; /* Remove border */
         }
 
-        .file-list li, .file-list li a { /* Apply to both li and generated link */
-            display: flex; /* Use flex for icon + text */
+        /* --- Tree View Styling --- */
+        .tree-view ul {
+            list-style-type: none;
+            padding-left: 15px; /* Indentation level */
+            margin: 0;
+        }
+        .tree-view > ul {
+             padding-left: 0; /* No indent for the root */
+             margin: 0;
+        }
+        .tree-view { /* Add padding to the container div */
+            padding: 0 5px 0 20px; /* Pad left/right, consistent with H3 */
+        }
+
+
+        .tree-view li {
+            padding: 0;
+            margin: 0;
+            position: relative; /* Keep for potential pseudo-elements */
+        }
+
+        /* Styling for the clickable item */
+        .tree-item {
+            display: flex;
             align-items: center;
-            padding: 10px 12px;
-            margin-bottom: 4px;
-            border-radius: var(--border-radius);
+            padding: 5px 10px; /* Balanced padding */
             cursor: pointer;
-            transition: background-color var(--transition-speed) ease,
-                        color var(--transition-speed) ease;
+            border-radius: var(--border-radius);
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 0.95em;
-            color: var(--text-color); /* Reset link color initially */
-            text-decoration: none; /* Remove underline from links */
-        }
-        .file-list li:hover, .file-list li a:hover {
-            background-color: var(--hover-bg);
-        }
-        .file-list li.active {
-            background-color: var(--active-bg);
-            color: var(--text-light);
-            font-weight: 500;
-        }
-         .file-list li.active:hover { /* Keep active color on hover */
-            background-color: var(--active-bg);
-            color: var(--text-light);
+            font-size: 0.9em; /* Adjusted size */
+            color: var(--text-color);
+            text-decoration: none;
+            width: 100%;
+            border: 1px solid transparent; /* Placeholder for active border */
+            margin: 1px 0; /* Vertical spacing */
         }
 
-        /* File type icons (Simple using ::before) */
-        .file-list li::before, .file-list li a::before { /* Apply icon style to link inside li too */
-            content: '📄'; /* Default icon */
-            margin-right: 10px;
-            font-size: 1.1em;
-            display: inline-block; /* Needed for margin */
-             flex-shrink: 0; /* Prevent icon from shrinking */
+        .tree-item:hover {
+            background-color: var(--hover-bg);
+        }
+
+        /* Selected FILE styling */
+        .tree-item.active {
+            background-color: var(--active-bg);
+            color: var(--primary-hover); /* Use darker blue for selected text */
+            font-weight: 500;
+            border-left: 3px solid var(--active-border); /* Use active indicator */
+            padding-left: 7px; /* Adjust padding to account for border */
+        }
+
+        /* Selected FOLDER item styling (subtle) */
+        li.folder.open > .tree-item.folder-item {
+           color: var(--primary-color); /* Just change text color for open folder */
+        }
+
+
+        /* Toggle arrow/icon for FOLDERS */
+        .folder-toggle {
+             display: flex; /* Use flex for alignment */
+             align-items: center;
+             justify-content: center;
+             width: 20px; /* Consistent size */
+             height: 20px; /* Consistent size */
+             margin-right: 3px;
+             font-size: 0.7em;
+             color: var(--folder-color);
+             flex-shrink: 0;
+             transition: transform var(--transition-speed) ease, color var(--transition-speed) ease;
+             user-select: none;
+             opacity: 0.7;
+             border-radius: 3px;
+        }
+        .tree-item:hover .folder-toggle { /* Show clearer on item hover */
+            opacity: 1;
+            background-color: rgba(0,0,0,0.05);
+        }
+
+         .folder-toggle::before {
+             content: '▶';
+             display: inline-block;
+             transition: transform 0.1s ease-out;
          }
-        .file-list li[data-type="note"]::before, .file-list li a[data-type="note"]::before { content: '📝'; }
-        .file-list li[data-type="diary"]::before, .file-list li a[data-type="diary"]::before { content: '📔'; }
-        .file-list li[data-type="pdf"]::before, .file-list li a[data-type="pdf"]::before { content: '📎'; } /* Link icon */
-        /* Active state icon color */
-         .file-list li.active::before, .file-list li.active a::before {
-             filter: brightness(0) invert(1); /* Make icon white */
+        li.folder.open > .tree-item > .folder-toggle::before {
+             transform: rotate(90deg);
+        }
+
+
+        /* Folder/File specific icons */
+        .icon {
+             margin-right: 6px;
+             font-size: 1em; /* Align size with text */
+             flex-shrink: 0;
+             width: 1.3em; /* Fixed width */
+             text-align: center;
+             opacity: 0.8;
+             color: var(--text-light); /* Subdue icon color slightly */
+        }
+        .icon-folder { content: '📁'; color: #8da0b3; /* Softer blue-grey */ }
+        .icon-note { content: '📝'; }
+        .icon-diary { content: '📔'; }
+
+        /* Color icons on hover/active */
+        .tree-item:hover .icon { color: var(--text-color); opacity: 1; }
+        .tree-item.active .icon { color: var(--primary-hover); opacity: 1; }
+        .tree-item.active .icon-folder { color: var(--primary-hover); }
+
+
+        /* File/Folder Text */
+        .item-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-grow: 1;
+        }
+
+        /* Hide nested lists */
+        li.folder > ul { display: none; }
+        li.folder.open > ul { display: block; }
+
+        /* Add subtle lines for visual structure (optional) */
+        .tree-view ul > li {
+            position: relative;
+        }
+        .tree-view ul > li::before { /* Vertical line */
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: var(--border-color);
+            /* Adjust positioning based on icon/toggle */
+            left: calc(10px); /* Align with center of folder toggle */
+            top: -8px; /* Extend line upwards slightly */
+        }
+         .tree-view ul > li:last-child::before {
+             height: 14px; /* Shorter line for last item */
+         }
+
+        .tree-view ul > li > .tree-item::before { /* Horizontal connector */
+             content: '';
+             position: absolute;
+             left: calc(10px);
+             top: 15px; /* Vertically center with tree item text */
+             width: 10px; /* Connect to vertical line */
+             height: 1px;
+             background-color: var(--border-color);
+         }
+        .tree-view > ul > li::before,
+        .tree-view > ul > li > .tree-item::before { /* Remove lines for root level */
+             display: none;
          }
 
         /* --- Content Area Elements --- */
         #content-title {
-            font-size: 1.8em;
-            font-weight: 600;
+            font-size: 1.9em; /* Larger main title */
+            font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+         }
+         #content-area #file-content { /* Reset potential content area inherited styles */
+            font-size: var(--base-font-size); /* Consistent sizing */
+            line-height: 1.7;
             word-wrap: break-word;
-        }
-
-        /* Div used for HTML rendering from .txt files */
-        #file-content {
-            font-family: var(--sans-serif-font); /* Use standard font */
-            font-size: 1em;
-            line-height: 1.6; /* Normal line height often better for HTML */
-            /* white-space: pre-wrap; -- REMOVED FOR HTML */
-            word-wrap: break-word;          /* Keep for long unbroken strings */
-            background-color: var(--bg-color); /* Or #fdfdfd if slightly off-white is desired */
-            /* border: 1px solid var(--border-color); -- Optionally remove border for cleaner look */
-            border-radius: var(--border-radius);
-            padding: 5px; /* Add slight padding or rely on element margins */
-            min-height: 300px; /* Adjust as needed */
-            /* box-shadow: var(--shadow-light); -- Optional shadow */
-        }
-
-         /* Basic styling for common HTML elements INSIDE #file-content */
-        #file-content h1,
-        #file-content h2,
-        #file-content h3,
-        #file-content h4,
-        #file-content h5,
-        #file-content h6 {
-            margin-top: 1.3em;
-            margin-bottom: 0.6em;
+            margin-top: 15px;
+            min-height: 100px; /* Adjust min height */
+            padding: 0; /* Remove inner padding, handled by #content-area */
+         }
+        /* Enhanced content typography and elements */
+        #file-content h1, #file-content h2, #file-content h3,
+        #file-content h4, #file-content h5, #file-content h6 {
+            margin: 1.8em 0 0.8em 0;
             font-weight: 600;
             line-height: 1.3;
-            color: var(--primary-color); /* Use theme color or keep default text-color */
+            color: var(--text-color);
+            letter-spacing: -0.2px;
          }
-         #file-content h1 { font-size: 1.8em; }
-         #file-content h2 { font-size: 1.5em; }
-         #file-content h3 { font-size: 1.3em; }
-         #file-content h4 { font-size: 1.1em; }
-
-         #file-content p {
-            margin-bottom: 1em;
-        }
-        #file-content ul,
-        #file-content ol {
-            margin-left: 2em; /* Indent lists */
-            margin-bottom: 1em;
-         }
-         #file-content li {
-            margin-bottom: 0.4em; /* Space between list items */
-         }
-         #file-content hr {
-             border: none;
-             border-top: 1px solid var(--border-color);
-             margin: 2em 0; /* More vertical space for HR */
-         }
-         #file-content a {
-             color: var(--link-color);
-             text-decoration: underline;
-         }
-         #file-content a:hover {
-             color: #1f618d; /* Darker link color on hover */
-         }
-         #file-content b, #file-content strong {
-             font-weight: bold; /* Browsers usually handle this, but good to be explicit */
-         }
-          #file-content i, #file-content em {
-             font-style: italic; /* Browsers usually handle this */
-          }
-          #file-content u {
-             text-decoration: underline; /* Browsers usually handle this */
-           }
-          #file-content code { /* Styling for inline code */
-             font-family: var(--monospace-font);
-             background-color: var(--code-bg);
-             color: #d6336c; /* Pinkish for code? Adjust */
-             padding: 0.2em 0.4em;
-             border-radius: var(--border-radius);
-             font-size: 0.9em;
-           }
-           #file-content pre code { /* Styling for code blocks */
-               display: block;
-               padding: 1em;
-               background-color: var(--code-bg);
-               color: var(--text-color); /* Reset color for block */
-               border-radius: var(--border-radius);
-               overflow-x: auto; /* Add scroll for long lines */
-               margin-bottom: 1em;
-               font-size: 0.9em;
-           }
-           #file-content blockquote { /* Styling for quotes */
-              margin: 1.5em 0 1.5em 1.5em;
-              padding-left: 1em;
-              border-left: 4px solid var(--quote-border);
-              color: var(--quote-text);
-              font-style: italic;
-            }
-           #file-content img { /* Basic responsive images */
-                max-width: 100%;
-                height: auto;
-                display: block; /* Center it easier */
-                margin: 1em auto;
-                border-radius: var(--border-radius);
-           }
-
-        /* PDF Download Area */
-        #pdf-download-section {
-            display: none; /* Hidden by default, shown for PDF links */
-            text-align: center;
-            padding: 40px 20px;
-            border: 1px dashed var(--border-color);
+        #file-content h1 { font-size: 1.8em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+        #file-content h2 { font-size: 1.5em; border-bottom: 1px solid var(--secondary-color); padding-bottom: 0.2em; }
+        #file-content h3 { font-size: 1.3em; }
+        #file-content h4 { font-size: 1.1em; font-weight: 500;}
+        #file-content p { margin-bottom: 1.2em; }
+        #file-content ul, #file-content ol { margin-left: 1.5em; margin-bottom: 1.2em; padding-left: 1em; }
+        #file-content ul li { list-style-type: disc; }
+        #file-content ol li { list-style-type: decimal; }
+        #file-content li { margin-bottom: 0.6em; }
+        #file-content li > ul, #file-content li > ol { margin-top: 0.6em; margin-bottom: 0; }
+        #file-content hr { border: none; border-top: 2px solid var(--border-color); margin: 3em 0; }
+        #file-content a { color: var(--link-color); text-decoration: none; border-bottom: 1px solid var(--primary-light); transition: color var(--transition-speed), border-color var(--transition-speed); }
+        #file-content a:hover { color: var(--primary-hover); border-bottom-color: var(--primary-hover); }
+        #file-content b, #file-content strong { font-weight: 600; }
+        #file-content i, #file-content em { font-style: italic; }
+        #file-content u { text-decoration-style: wavy; text-decoration-color: var(--primary-light); } /* Subtle underline */
+        #file-content code {
+            font-family: var(--monospace-font);
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 0.2em 0.45em;
             border-radius: var(--border-radius);
-            background-color: #f8f9fa;
+            font-size: 0.88em; /* Slightly smaller code font */
+            border: 1px solid var(--border-color);
         }
-
-        #pdf-download-link {
-            display: inline-block;
-            padding: 15px 30px;
-            font-size: 1.1em;
-            font-weight: 600;
-            color: var(--text-light);
-            background-color: var(--primary-color);
+        #file-content pre {
+            display: block;
+            padding: 1em 1.2em;
+            background-color: var(--code-bg);
+            color: var(--code-text);
             border-radius: var(--border-radius);
-            text-decoration: none;
-            transition: background-color var(--transition-speed) ease, transform 0.1s ease;
-            box-shadow: var(--shadow-medium);
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+            margin: 1.5em 0;
+            font-family: var(--monospace-font);
+            font-size: 0.88em;
+            line-height: 1.5;
+            box-shadow: var(--shadow-sm);
         }
-        #pdf-download-link:hover {
-            background-color: #216ca0; /* Darker primary */
-            transform: translateY(-1px);
-        }
-         #pdf-download-link::before {
-             content: '⬇️'; /* Download icon */
-             margin-right: 10px;
+        #file-content pre code { padding: 0; background: none; border: none; font-size: inherit; }
+        #file-content blockquote {
+            margin: 1.8em 0 1.8em 0;
+            padding: 0.8em 1.5em;
+            border-left: 4px solid var(--quote-border);
+            background-color: var(--hover-bg); /* Slight background */
+            color: var(--quote-text);
+            font-style: normal; /* Remove italic */
+            border-radius: 0 var(--border-radius) var(--border-radius) 0; /* Round corners */
+         }
+        #file-content blockquote p:last-child { margin-bottom: 0; } /* Fix quote spacing */
+        #file-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 2em auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
          }
 
         /* --- Status & Loader --- */
         #status-message {
-            font-size: 0.9em;
-            font-style: italic;
-            color: #6c757d; /* Grey */
-            margin-top: auto; /* Push to bottom of sidebar */
-            padding-top: 15px;
+            font-size: 0.8em;
+            font-style: normal; /* Remove italic */
+            color: var(--text-light);
+            margin: auto 20px 0 20px; /* Use margins for positioning */
+            padding-top: 12px;
             border-top: 1px solid var(--border-color);
-        }
-        #loader { /* Centered loader for content */
-             position: absolute;
-             top: 50%;
-             left: 50%;
-             transform: translate(-50%, -50%);
-             border: 5px solid var(--secondary-color);
-             border-radius: 50%;
-             border-top: 5px solid var(--primary-color);
-             width: 40px;
-             height: 40px;
-             animation: spin 1s linear infinite;
-             display: none; /* Hidden by default */
-             z-index: 20; /* Ensure it's above content */
+            line-height: 1.4;
          }
-        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        #loader {
+             position: absolute;
+             top: 50px; /* Position below title */
+             left: 50%;
+             transform: translateX(-50%);
+             border: 4px solid var(--hover-bg);
+             border-radius: 50%;
+             border-top-color: var(--primary-color);
+             width: 30px;
+             height: 30px;
+             animation: spin 0.8s linear infinite;
+             display: none;
+             z-index: 100;
+         }
+        @keyframes spin { 0% { transform: translateX(-50%) rotate(0deg); } 100% { transform: translateX(-50%) rotate(360deg); } }
+
+        /* --- Local Warning Style --- */
+        #local-warning {
+             margin: 15px 20px 0 20px; /* Match status margin */
+             font-size: 0.8em;
+             color: #c0392b; /* Error red */
+             background-color: #fadbd8; /* Light red background */
+             border: 1px solid #f1948a; /* Red border */
+             padding: 8px 12px;
+             border-radius: var(--border-radius);
+             line-height: 1.4;
+         }
+         #local-warning a { color: #922b21; font-weight: 500; text-decoration: underline; }
 
         /* --- Responsiveness --- */
         @media (max-width: 900px) {
-            #sidebar {
-                 width: 240px;
-             }
-             #content-area {
-                 padding: 20px;
-             }
-            #content-title {
-                 font-size: 1.5em;
-             }
-             #file-content {
-                 /* padding: 15px; */ /* Can keep padding or adjust */
-                 font-size: 0.95em;
-             }
-         }
-
+            :root { --sidebar-width: 240px; }
+            #content-area { padding: 20px; }
+            #content-title { font-size: 1.7em; }
+            #file-content { font-size: calc(var(--base-font-size) * 0.98); }
+            #sidebar h2 { font-size: 1.1em; }
+        }
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-                height: auto;
-                overflow: auto; /* Enable body scroll */
-            }
+            body { flex-direction: column; height: 100%; overflow-y: auto; /* Allow body scroll */ }
             #sidebar {
                 width: 100%;
                 height: auto;
-                max-height: 45vh; /* Limit height when stacked */
+                max-height: 45vh; /* Limit height */
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
                 box-shadow: none;
-                 box-sizing: border-box;
-            }
+                order: 1; /* Sidebar first */
+                padding: 15px 0 10px 0; /* Adjust padding */
+             }
             #content-area {
-                 height: auto;
-                 flex-grow: 1; /* Take remaining space */
-                 min-height: 55vh;
+                height: auto;
+                min-height: 55vh; /* Take remaining height */
+                order: 2; /* Content second */
+                flex-grow: 1; /* Allow it to take space */
              }
-             #status-message {
-                 margin-top: 15px; /* Ensure it's visible */
-             }
-         }
+            #status-message { margin: 10px 20px 0 20px; } /* Adjust margin */
+            /* Adjust tree indent lines for smaller sidebar area */
+             .tree-view ul > li::before { left: 8px; }
+             .tree-view ul > li > .tree-item::before { left: 8px; width: 10px; }
+             .tree-view { padding: 0 5px 0 15px; }
 
-         @media (max-width: 480px) {
-            #sidebar {
-                 padding: 15px;
-                 max-height: 40vh;
-             }
-             .file-list li, .file-list li a {
-                 padding: 8px 10px;
-                 font-size: 0.9em;
-             }
-             #sidebar h2 { font-size: 1.2em; margin-bottom: 15px; }
-             #sidebar h3 { font-size: 1em; }
+        }
+        @media (max-width: 480px) {
+             :root { --base-font-size: 14px; }
+             #sidebar { padding: 10px 0 8px 0; max-height: 40vh; }
+             .tree-item { padding: 6px 8px; font-size: 0.88em;}
+             #sidebar h2 { font-size: 1.05em; padding: 0 15px 10px 15px; }
+             #sidebar h3 { font-size: 0.7em; margin: 12px 15px 5px 15px; }
+             .tree-view { padding: 0 3px 0 15px; } /* Consistent padding */
+
              #content-area { padding: 15px; }
-             #content-title { font-size: 1.3em; margin-bottom: 20px; }
-             #pdf-download-link { padding: 12px 25px; font-size: 1em; }
-             #file-content {
-                 font-size: 0.9em; /* Adjust content font on small screens */
-             }
+             #content-title { font-size: 1.5em; margin-bottom: 15px;}
+             #file-content { font-size: 0.92em; line-height: 1.65;}
+             #file-content h1 { font-size: 1.6em; }
+             #file-content h2 { font-size: 1.3em; }
+             #file-content h3 { font-size: 1.15em; }
+             #file-content pre, #file-content code { font-size: 0.85em; }
+             #status-message { margin: 10px 15px 0 15px; }
+             #local-warning { margin: 10px 15px 0 15px; font-size: 0.78em; padding: 6px 10px;}
+             /* Tree line adjustments for mobile */
+             .tree-view ul > li::before { left: 6px; }
+             .tree-view ul > li > .tree-item::before { left: 6px; width: 8px; }
+             .tree-view ul { padding-left: 12px; }
+
          }
 
     </style>
 </head>
 <body>
     <aside id="sidebar">
-        <h2>MP Notes</h2>
+        <h2>Mp Notes</h2>
 
         <h3>Notes</h3>
-        <ul id="notes-list" class="file-list">
-            <!-- Populated by script -->
-            <li>Loading...</li>
-        </ul>
+        <div id="notes-tree" class="tree-view"><ul><li>Loading Notes...</li></ul></div>
 
         <h3>Diary</h3>
-        <ul id="diary-list" class="file-list">
-            <!-- Populated by script -->
-             <li>Loading...</li>
-        </ul>
+        <div id="diary-tree" class="tree-view"><ul><li>Loading Diary...</li></ul></div>
 
-        <h3>PDFs</h3>
-        <ul id="pdfs-list" class="file-list">
-             <!-- Populated by script -->
-             <li>Loading...</li>
-        </ul>
-
+        <!-- Status message moved here to stay at the bottom -->
         <div id="status-message">Initializing...</div>
     </aside>
 
     <main id="content-area">
-        <div id="loader"></div> <!-- Centered loader -->
-        <h1 id="content-title">Welcome! Select a file</h1>
+        <div id="loader"></div> <!-- Loader within content area -->
+        <h1 id="content-title">Welcome!</h1>
 
-        <!-- Area to display text file content (NOW A DIV FOR HTML) -->
-        <div id="file-content">File content will appear here for .txt files.</div>
+        <!-- Area to display text file content -->
+        <div id="file-content"><p>Select a note or diary entry from the sidebar to view its content.</p></div>
 
-        <!-- Area for PDF download link -->
-         <div id="pdf-download-section">
-             <p>This is a PDF file. You can download it using the link below.</p>
-             <a id="pdf-download-link" href="#" download>Download PDF</a>
-         </div>
     </main>
 
     <script>
-        const notesListElement = document.getElementById('notes-list');
-        const diaryListElement = document.getElementById('diary-list');
-        const pdfsListElement = document.getElementById('pdfs-list');
-        const fileContentElement = document.getElementById('file-content'); // Now a DIV
-        const pdfDownloadSection = document.getElementById('pdf-download-section');
-        const pdfDownloadLink = document.getElementById('pdf-download-link');
+        // --- DOM References ---
+        const treeViewRoots = {
+             notes: document.getElementById('notes-tree').querySelector('ul'),
+             diary: document.getElementById('diary-tree').querySelector('ul'),
+        };
+        const fileContentElement = document.getElementById('file-content');
         const contentTitleElement = document.getElementById('content-title');
         const statusMessageElement = document.getElementById('status-message');
         const loaderElement = document.getElementById('loader');
+        const sidebarElement = document.getElementById('sidebar'); // Added for warning message
 
-        const CSV_FILE_PATH = './filelist.csv'; // Path relative to the HTML file
-        let currentActiveLi = null;
+        const CSV_FILE_PATH = './filelist.csv';
+        let currentActiveTreeItem = null; // Tracks the highlighted tree-item SPAN/A
+        let fileDataCache = null; // Holds the hierarchical file tree
 
-        // Simple function to create readable titles
-        function formatFilename(filename) {
-             return filename.replace('.txt', '').replace('.pdf', '').replace(/[_\-]/g, ' ');
+        // --- Helper Functions ---
+        function getBaseFilename(filepath) {
+             if (!filepath) return '';
+             return filepath.substring(filepath.lastIndexOf('/') + 1);
         }
 
-        // Function to parse simple CSV data (type,filename)
-        function parseCSV(csvText) {
+        function formatDisplayTitle(filepath, type) {
+             if (!filepath) return 'Unknown File';
+             const baseFilename = getBaseFilename(filepath);
+             let displayFilename = baseFilename.replace('.txt', '').replace(/[_\-]/g, ' ');
+             const parts = filepath.split('/');
+             if (parts.length > 2) {
+                 const subPath = parts.slice(1, -1).map(s => s.replace(/[_\-]/g, ' ')).join(' › '); // Clean up subpath names too
+                 displayFilename = `${subPath} › ${displayFilename}`;
+             }
+             // Capitalize first letter
+             displayFilename = displayFilename.charAt(0).toUpperCase() + displayFilename.slice(1);
+             return displayFilename.trim() || baseFilename.replace('.txt', '');
+         }
+
+        function showLoader() { loaderElement.style.display = 'block'; }
+        function hideLoader() { loaderElement.style.display = 'none'; }
+        function updateStatus(message) { if(statusMessageElement) statusMessageElement.textContent = message; }
+
+        // --- Core Tree Building Logic ---
+        function buildFileTree(csvText) {
+             const tree = { notes: [], diary: [] };
              const lines = csvText.trim().split('\n');
-             const files = { notes: [], diary: [], pdfs: [] };
-             const startIndex = lines[0].toLowerCase().includes('type,filename') ? 1 : 0; // Skip header optionally
+             const isHeader = lines[0]?.toLowerCase().includes('type,filepath');
+             const startIndex = isHeader ? 1 : 0;
 
              for (let i = startIndex; i < lines.length; i++) {
-                 const line = lines[i].trim();
-                 if (!line) continue;
-                 const parts = line.split(','); // Basic split, assumes no commas in filename/type
-                 if (parts.length >= 2) {
-                     const type = parts[0].trim().toLowerCase();
-                     const filename = parts[1].trim();
-                     if (filename) { // Ensure filename is not empty
-                         if (type === 'note') files.notes.push(filename);
-                         else if (type === 'diary') files.diary.push(filename);
-                         else if (type === 'pdf') files.pdfs.push(filename);
-                     } else {
-                          console.warn(`Skipping line ${i + 1}: Empty filename - "${line}"`);
+                 const line = lines[i].trim(); if (!line) continue;
+                 // Robust splitting: handle commas within quoted fields if needed, though simple split assumed here
+                 const parts = line.split(',');
+                 if (parts.length < 2) { console.warn(`Malformed CSV line ${i+1}: "${line}"`); continue; }
+
+                 const type = parts[0].trim().toLowerCase();
+                 const filepath = parts.slice(1).join(',').trim().replace(/^["']|["']$/g, ''); // Handle potential quotes
+
+                 if (!filepath || !tree.hasOwnProperty(type)) {
+                     if (type !== 'pdf') { // Only warn if not a deliberately skipped PDF
+                         console.warn(`Skipping invalid/unknown type or filepath in CSV line ${i+1}: Type='${type}', Path='${filepath}'`);
                      }
-                 } else {
-                      console.warn(`Skipping malformed CSV line ${i + 1}: "${line}"`);
+                     continue;
                  }
-             }
-             // Sort files alphabetically within each category
-             Object.values(files).forEach(arr => arr.sort((a, b) => a.localeCompare(b)));
-             return files;
-         }
 
-         // Function to create list items for TEXT files (Notes, Diary)
-         function createTextListItems(listElement, filenames, directory) {
-            listElement.innerHTML = ''; // Clear placeholder
-            if (!filenames || filenames.length === 0) {
-                 listElement.innerHTML = `<li>No files listed in CSV.</li>`;
-                 return;
-             }
-            filenames.forEach(filename => {
-                const li = document.createElement('li');
-                const type = directory === 'notes' ? 'note' : 'diary';
-                li.textContent = formatFilename(filename);
-                li.dataset.filename = filename;
-                li.dataset.dir = directory;
-                li.dataset.type = type; // Add type for icon styling
-                li.title = filename; // Show full name on hover
-                li.onclick = () => loadTextFile(li, directory, filename);
-                listElement.appendChild(li);
-            });
-         }
+                 const pathSegments = filepath.split('/').filter(Boolean); // Filter out empty segments
 
-          // Function to create list items for PDF files
-          function createPdfListItems(listElement, filenames) {
-              listElement.innerHTML = ''; // Clear placeholder
-             if (!filenames || filenames.length === 0) {
-                  listElement.innerHTML = `<li>No PDFs listed in CSV.</li>`;
-                  return;
-              }
-             filenames.forEach(filename => {
-                  const li = document.createElement('li'); // List item will contain the link
-                  const link = document.createElement('a'); // Use a link directly for PDF
-
-                  link.href = `./pdfs/${filename}`;
-                  link.download = filename; // Suggest filename for download
-                  link.textContent = formatFilename(filename);
-                  link.title = `Download: ${filename}`; // Update tooltip
-                  link.dataset.filename = filename;
-                  link.dataset.type = 'pdf'; // Type for icon
-
-                   // Clicking the PDF link/item in sidebar shows download prompt in content area
-                   li.onclick = (e) => {
-                      e.preventDefault(); // Prevent link from navigating immediately
-                      displayPdfPrompt(filename); // Show the prompt
-                      if (currentActiveLi) currentActiveLi.classList.remove('active');
-                      li.classList.add('active'); // Highlight the list item
-                      currentActiveLi = li;
-                   };
-
-                  li.appendChild(link); // Add link inside list item
-                  listElement.appendChild(li);
-              });
-         }
-
-         // Function to show the PDF download section in the content area
-         function displayPdfPrompt(filename){
-             fileContentElement.style.display = 'none'; // Hide text content area
-             pdfDownloadSection.style.display = 'block'; // Show PDF section
-             contentTitleElement.textContent = `PDF File`; // Clearer title
-             const readableFilename = formatFilename(filename);
-             pdfDownloadSection.querySelector('p').textContent = `Selected PDF: "${readableFilename}". Click below to download.`;
-             pdfDownloadLink.href = `./pdfs/${filename}`;
-             pdfDownloadLink.download = filename;
-             pdfDownloadLink.textContent = `Download "${readableFilename}"`
-             loaderElement.style.display = 'none'; // Ensure loader is off
-         }
-
-
-        // Function to fetch and display TEXT file content (renders HTML now)
-        async function loadTextFile(listItem, directory, filename) {
-            if (currentActiveLi) currentActiveLi.classList.remove('active');
-            listItem.classList.add('active');
-            currentActiveLi = listItem;
-
-            // Set UI state for loading text
-            const displayFilename = formatFilename(filename);
-            contentTitleElement.textContent = `Loading: ${displayFilename}`;
-            fileContentElement.style.display = 'block'; // Show text area DIV
-            pdfDownloadSection.style.display = 'none'; // Hide PDF section
-            fileContentElement.innerHTML = ''; // Clear previous content
-            loaderElement.style.display = 'block';
-            statusMessageElement.textContent = `Loading ${filename}...`;
-
-            const path = `./${directory}/${filename}`;
-
-            try {
-                const response = await fetch(path, { cache: "no-store" }); // Disable cache for notes too?
-                 if (!response.ok) {
-                    if (response.status === 404) throw new Error(`File not found at '${path}'. Check filelist.csv and if file exists.`);
-                    else throw new Error(`HTTP error! Status: ${response.status} loading '${path}'.`);
+                 if (pathSegments.length === 0 || pathSegments[0] !== type) {
+                     console.warn(`Filepath base folder mismatch or invalid path in CSV line ${i+1}: Expected base '${type}', Path='${filepath}'`);
+                     continue;
                  }
-                const textContent = await response.text();
 
-                // *** HTML Rendering Part ***
-                // SECURITY WARNING: Using innerHTML. Ensure your .txt files contain only trusted HTML (basic formatting).
-                // Avoid <script> tags or complex event handlers in your source .txt files.
-                fileContentElement.innerHTML = textContent;
-                // ***************************
+                 let currentLevel = tree[type];
+                 for (let j = 1; j < pathSegments.length - 1; j++) { // Iterate folder segments
+                      const segmentName = pathSegments[j];
+                     let folderNode = currentLevel.find(node => node.type === 'folder' && node.name === segmentName);
+                     if (!folderNode) {
+                          folderNode = { name: segmentName, type: 'folder', children: [] };
+                          currentLevel.push(folderNode);
+                          // Sorting (folders first, then alpha) applied after adding all items at this level
+                     }
+                     currentLevel = folderNode.children;
+                 }
 
-                contentTitleElement.textContent = displayFilename; // Set title on success
-                statusMessageElement.textContent = `Loaded: ${filename}.`;
+                 // Add the file node
+                 const filename = pathSegments[pathSegments.length - 1];
+                 if (!filename) { console.warn(`Empty filename derived from CSV line ${i+1}: ${filepath}`); continue; }
 
-            } catch (error) {
-                console.error('Error loading text file:', error);
-                contentTitleElement.textContent = "Error Loading File";
-                fileContentElement.innerHTML = `<p style="color:red;"><strong>Error:</strong> ${error.message}</p>`; // Display error as HTML
-                statusMessageElement.textContent = 'Error loading file content.';
-                if (currentActiveLi) currentActiveLi.classList.remove('active'); // Deselect on error
-                 currentActiveLi = null;
-            } finally {
-                loaderElement.style.display = 'none';
+                 const fileNode = { name: filename, type: type, filepath: filepath };
+                 currentLevel.push(fileNode);
+             }
+
+             // Recursive sort function
+             function sortNodes(nodes) {
+                 nodes.sort((a, b) => {
+                     if (a.type === 'folder' && b.type !== 'folder') return -1;
+                     if (a.type !== 'folder' && b.type === 'folder') return 1;
+                     // Use localeCompare for better alphanumeric sorting
+                     return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+                 });
+                 // Sort children recursively
+                 nodes.forEach(node => {
+                     if (node.type === 'folder' && node.children) {
+                         sortNodes(node.children);
+                     }
+                 });
+             }
+
+             // Sort each root category
+             sortNodes(tree.notes);
+             sortNodes(tree.diary);
+
+             console.log("Built File Tree:", tree);
+             return tree;
+         }
+
+        // --- Recursive Tree Rendering ---
+         function renderTree(nodes, parentElement) {
+            parentElement.innerHTML = ''; // Clear existing content
+            if (!nodes || nodes.length === 0) {
+                 // More user-friendly "empty" message
+                 parentElement.innerHTML = '<li class="tree-item empty-item" style="padding-left: 10px; color: var(--text-light); font-style: italic; cursor: default;">(empty)</li>';
+                return;
             }
-        }
 
-        // --- Main initialization function ---
-        async function initializeReader() {
-             loaderElement.style.display = 'block';
-             statusMessageElement.textContent = 'Fetching file list...';
-             // Hide content areas initially
-             fileContentElement.style.display = 'none';
-             pdfDownloadSection.style.display = 'none';
-             contentTitleElement.textContent = 'Welcome! Select a file';
+             nodes.forEach(node => {
+                 const li = document.createElement('li');
+                 // Using A tag for semantic correctness of navigation/action items
+                 const treeItem = document.createElement('a'); // Changed to A tag
+                 treeItem.href = '#'; // Prevent page jump, handle click via JS
+                 treeItem.classList.add('tree-item');
+                 treeItem.addEventListener('click', (e) => e.preventDefault()); // Prevent default link behavior
+
+
+                 const iconSpan = document.createElement('span');
+                 iconSpan.classList.add('icon');
+                 // Accessibility: Hide decorative icons from screen readers
+                 iconSpan.setAttribute('aria-hidden', 'true');
+
+                 const nameSpan = document.createElement('span');
+                 nameSpan.classList.add('item-name');
+                 // Display name cleaned up
+                 nameSpan.textContent = node.name.replace('.txt','').replace(/[_\-]/g, ' ');
+
+                if (node.type === 'folder') {
+                     li.classList.add('folder');
+                     treeItem.classList.add('folder-item');
+
+                     const toggleSpan = document.createElement('span');
+                     toggleSpan.classList.add('folder-toggle');
+                     toggleSpan.setAttribute('aria-hidden', 'true'); // Decorative toggle
+                     treeItem.appendChild(toggleSpan);
+
+                    iconSpan.classList.add('icon-folder');
+                     treeItem.appendChild(iconSpan);
+                     treeItem.appendChild(nameSpan);
+
+                     treeItem.onclick = (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          li.classList.toggle('open');
+                          // Optionally indicate expanded state for accessibility
+                          treeItem.setAttribute('aria-expanded', li.classList.contains('open'));
+                      };
+                      li.appendChild(treeItem);
+
+                     const childrenUl = document.createElement('ul');
+                     // Accessibility: Mark nested list as owned by the folder item
+                     childrenUl.setAttribute('role', 'group');
+                     treeItem.setAttribute('aria-owns', `folder-content-${node.filepath || Math.random()}`); // Needs unique ID ideally
+                     childrenUl.id = `folder-content-${node.filepath || Math.random()}`;
+
+                     li.appendChild(childrenUl);
+                     if (node.children && node.children.length > 0) {
+                          renderTree(node.children, childrenUl); // Recursive call
+                      } else {
+                          childrenUl.innerHTML = '<li class="tree-item empty-item" style="padding-left: 10px; color: var(--text-light); font-style: italic; cursor: default; font-size: 0.9em;">(empty)</li>';
+                      }
+                      // Initial state for accessibility
+                      treeItem.setAttribute('aria-expanded', 'false');
+
+                } else { // File (note, diary)
+                      li.classList.add('file');
+                     treeItem.dataset.filepath = node.filepath;
+                     treeItem.dataset.type = node.type;
+                     treeItem.title = `View: ${formatDisplayTitle(node.filepath, node.type)}`; // Tooltip
+
+                     iconSpan.classList.add(`icon-${node.type}`);
+                     // Create alignment spacer *before* the icon span in the flex container
+                     const spacer = document.createElement('span');
+                     spacer.style.cssText = 'display: inline-block; width: 20px; flex-shrink: 0;'; // Match folder toggle width
+                     treeItem.appendChild(spacer);
+                     treeItem.appendChild(iconSpan);
+                     treeItem.appendChild(nameSpan);
+
+                     treeItem.onclick = (e) => {
+                         e.preventDefault();
+                         e.stopPropagation();
+                         highlightActiveItem(treeItem);
+                         loadTextFile(node.filepath, node.type);
+                     };
+                     li.appendChild(treeItem);
+                 }
+                 parentElement.appendChild(li);
+             });
+         }
+
+        function highlightActiveItem(targetItemElement) {
+            if (currentActiveTreeItem && currentActiveTreeItem !== targetItemElement) {
+                 currentActiveTreeItem.classList.remove('active');
+                 currentActiveTreeItem.removeAttribute('aria-current'); // ARIA
+             }
+            if (targetItemElement && !targetItemElement.classList.contains('folder-item')) {
+                targetItemElement.classList.add('active');
+                currentActiveTreeItem = targetItemElement;
+                targetItemElement.setAttribute('aria-current', 'page'); // ARIA: Mark as current
+            } else {
+                // If a folder was clicked or null passed, clear current
+                 if (currentActiveTreeItem) {
+                     currentActiveTreeItem.classList.remove('active');
+                     currentActiveTreeItem.removeAttribute('aria-current');
+                 }
+                currentActiveTreeItem = null;
+            }
+         }
+
+        // --- Content Loading Functions ---
+        async function loadTextFile(filepath, type) {
+            contentTitleElement.textContent = `Loading...`;
+            fileContentElement.innerHTML = ''; // Clear existing content first
+            fileContentElement.style.display = 'none'; // Hide until loaded
+            showLoader();
+            // Remove highlight immediately for visual feedback if switching files
+            // highlightActiveItem(null); // Keep highlight until new one loads? Or remove? Let's keep it.
+            updateStatus(`Loading ${filepath}...`);
+
+            const path = `./${filepath}`; // Assuming files are relative to HTML
+            try {
+                 // Added timestamp to prevent aggressive caching issues
+                 const fetchPath = `${path}?t=${new Date().getTime()}`;
+                 const response = await fetch(fetchPath); // Removed cache: "no-store" for normal behavior unless issues arise
+
+                 if (!response.ok) {
+                    // Provide more specific error info
+                    let errorMsg = `Failed to load '${filepath}'. Status: ${response.status} ${response.statusText}.`;
+                    if (response.status === 404) errorMsg += " File not found.";
+                    if (response.status === 403) errorMsg += " Permission denied.";
+                     throw new Error(errorMsg);
+                 }
+                 const textContent = await response.text();
+
+                 // Render HTML Content (CRITICAL: Ensure input HTML is trusted or sanitized)
+                 // WARNING: Only use this if the .txt files contain safe HTML you control.
+                 // If the content might be arbitrary HTML/JS, use textContent instead or a sanitizer library.
+                 fileContentElement.innerHTML = textContent;
+
+                 const displayTitle = formatDisplayTitle(filepath, type);
+                 contentTitleElement.textContent = displayTitle;
+                 updateStatus(`Loaded: ${filepath}.`);
+
+             } catch (error) {
+                 console.error('Error loading text file:', error);
+                 contentTitleElement.textContent = "Error Loading File";
+                 // Display a more user-friendly error in the content area
+                 fileContentElement.innerHTML = `
+                     <div style="padding: 20px; border: 1px solid var(--accent-color); background-color: #fdedec; border-radius: var(--border-radius);">
+                         <strong style="color: var(--accent-color);">Error:</strong>
+                         <p style="margin-top: 5px;">Could not load the selected file.</p>
+                         <p style="font-size: 0.9em; color: var(--text-light); margin-top: 10px;">${error.message}</p>
+                         <p style="font-size: 0.8em; margin-top: 15px;">Please check the file path in <code>filelist.csv</code> and ensure the file exists on the server.</p>
+                     </div>`;
+                 updateStatus(`Error loading ${filepath}.`);
+                 highlightActiveItem(null); // De-select item on error
+             } finally {
+                 hideLoader();
+                 fileContentElement.style.display = 'block'; // Show content area again
+                 // Scroll content area to top after loading new content
+                 document.getElementById('content-area').scrollTop = 0;
+             }
+         }
+
+
+         // --- Main initialization function ---
+         async function initializeReader() {
+             showLoader(); // Show loader in content area initially
+             updateStatus('Initializing...');
+             contentTitleElement.textContent = 'Welcome!'; // Initial title
+             fileContentElement.innerHTML = '<p>Select a note or diary entry from the sidebar to begin.</p>'; // Clearer initial message
+             fileContentElement.style.display = 'block';
 
 
             try {
-                 // Force fetch no-cache might be important if CSV changes often
-                 const response = await fetch(CSV_FILE_PATH, { cache: "no-store" });
-                 if (!response.ok) throw new Error(`Failed to fetch ${CSV_FILE_PATH} (Status: ${response.status}). Server running? CSV exists?`);
+                 const fetchPath = `${CSV_FILE_PATH}?t=${new Date().getTime()}`; // Prevent CSV caching
+                 const response = await fetch(fetchPath);
+                 if (!response.ok) throw new Error(`Failed to fetch file list <code>${CSV_FILE_PATH}</code> (Status: ${response.status} ${response.statusText}). Check path and server.`);
                  const csvData = await response.text();
-                 const fileData = parseCSV(csvData);
+                 fileDataCache = buildFileTree(csvData);
 
-                 createTextListItems(notesListElement, fileData.notes, 'notes');
-                 createTextListItems(diaryListElement, fileData.diary, 'diary');
-                 createPdfListItems(pdfsListElement, fileData.pdfs);
+                 renderTree(fileDataCache.notes, treeViewRoots.notes);
+                 renderTree(fileDataCache.diary, treeViewRoots.diary);
 
-                 // Improved feedback/warning logic
-                 if(window.location.protocol.startsWith('http')) {
-                    statusMessageElement.textContent = 'Ready. Select a file.';
-                 } else {
-                     statusMessageElement.textContent = 'Ready (CSV loaded).';
-                      if (!document.getElementById('local-warning')) {
-                          let warnDiv = document.createElement('div');
-                          warnDiv.id = 'local-warning';
-                          warnDiv.style.color = '#e67e22';
-                          warnDiv.style.marginTop = '10px';
-                          warnDiv.style.fontSize = '0.85em';
-                          warnDiv.innerHTML = '<strong>Note:</strong> Running on <code>file:///</code>. Loading individual files might fail due to security rules. Running a <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server" target="_blank" rel="noopener noreferrer">local server</a> is recommended.';
-                          document.getElementById('sidebar').appendChild(warnDiv);
-                      }
+                  // Add specific check for running locally vs. server
+                  const isLocal = !window.location.protocol.startsWith('http');
+                  if (isLocal && !document.getElementById('local-warning')) {
+                      let warnDiv = document.createElement('div');
+                      warnDiv.id = 'local-warning';
+                      // Inject warning just before the status message
+                      warnDiv.innerHTML = '<strong>Warning:</strong> Running locally (<code>file://</code>). Features like fetching files may not work correctly. Use a <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Tools_and_setup/set_up_a_local_testing_server" target="_blank" rel="noopener noreferrer" title="Learn about local servers">local server</a>.';
+                      sidebarElement.insertBefore(warnDiv, statusMessageElement);
+                      updateStatus('Ready (local mode). Select a file.');
+                  } else {
+                      updateStatus('Ready. Select a file.');
                   }
 
-            } catch (error) {
-                 console.error("Initialization failed:", error);
-                 statusMessageElement.textContent = `Initialization Error! See console.`;
-                  contentTitleElement.textContent = "Initialization Error";
-                 notesListElement.innerHTML = diaryListElement.innerHTML = pdfsListElement.innerHTML = `<li>Error loading list.</li>`;
-                 fileContentElement.style.display = 'block'; // Show error in content area
-                 fileContentElement.innerHTML = `<p style="color:red; font-weight:bold;">Failed to initialize reader.</p><p>Error details: ${error.message}</p><hr><p>Please check:</p><ul><li>A local web server is running in the project folder.</li><li><code>${CSV_FILE_PATH}</code> exists and is readable.</li><li>The CSV format is correct (type,filename).</li></ul>`;
-             } finally {
-                  loaderElement.style.display = 'none';
-             }
-        }
+              } catch (error) {
+                   console.error("Initialization failed:", error);
+                   updateStatus(`Initialization Error!`);
+                   contentTitleElement.textContent = "Initialization Error";
+                   Object.values(treeViewRoots).forEach(root => {
+                        if(root) root.innerHTML = '<li class="tree-item empty-item" style="color: var(--accent-color);">Error loading list.</li>';
+                    });
+                    // Display error prominently in content area
+                    fileContentElement.innerHTML = `
+                         <div style="padding: 20px; border: 1px solid var(--accent-color); background-color: #fdedec; border-radius: var(--border-radius);">
+                            <strong style="color: var(--accent-color);">Initialization Failed</strong>
+                            <p style="margin-top: 5px;">Could not load the file structure.</p>
+                            <p style="font-size: 0.9em; color: var(--text-light); margin-top: 10px;">${error.message}</p>
+                            <p style="font-size: 0.8em; margin-top: 15px;">Please ensure <code>filelist.csv</code> exists, is correctly formatted, and the page is served via a web server if necessary.</p>
+                         </div>`;
+
+               } finally {
+                    hideLoader(); // Hide loader once init is done or failed
+               }
+          }
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', initializeReader);
 
     </script>
+
 </body>
 </html>
