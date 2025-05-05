@@ -1,0 +1,56 @@
+<h2>Transaction</h2>
+  <p>
+    A transaction is a transfer of a thing of value from one holder to another. <br>
+    OR <br>
+    A transaction is a value shift from one account to another that can be measured in monetary terms.
+  </p>
+
+  <h2>Types of Accounting</h2>
+  <ol>
+    <li>
+      <strong>Financial Accounting:</strong> Financial accounting is accounting which deals with all financial transactions of a business in order to report the business's financial health. <br>
+      OR <br>
+      Financial Accounting is the process of recording, summarizing, and reporting a business's financial transactions to provide an accurate picture of its financial health.
+    </li>
+    <li>
+      <strong>Cost Accounting:</strong> Cost accounting is the process of tracking, recording, analyzing, and controlling costs associated with the production or acquiring of goods or services.
+    </li>
+    <li>
+      <strong>Management Accounting:</strong> Management accounting is the process of collecting, analyzing, interpreting, and presenting financial and non-financial information to help managers make decisions, plan, control operations, and achieve business goals.
+    </li>
+  </ol>
+
+  <h2>Objectives of Accounting</h2>
+  <ul>
+    <li>To maintain systematic records of business transactions</li>
+    <li>To determine profit or loss</li>
+    <li>To ascertain financial position</li>
+    <li>To provide information to users</li>
+    <li>To assist in decision making</li>
+  </ul>
+
+  <h2>Advantages of Accounting</h2>
+  <ul>
+    <li>Helps in decision making</li>
+    <li>Provides evidence in legal matters</li>
+    <li>Helps in tax computation</li>
+    <li>Helps in comparing business position</li>
+    <li>Assists in obtaining loans</li>
+    <li>Helps in detecting frauds and errors</li>
+  </ul>
+
+  <h2>Limitations of Accounting</h2>
+  <ul>
+    <li>Based on historical data</li>
+    <li>Ignores non-monetary factors</li>
+    <li>Possibility of manipulation (window dressing)</li>
+    <li>Affected by personal judgements</li>
+  </ul>
+
+  <h2>Qualitative Characteristics of Accounting</h2>
+  <ul>
+    <li><strong>Relevance:</strong> Timeliness, Materiality</li>
+    <li><strong>Reliability:</strong> Verifiability, Neutrality, Completeness</li>
+    <li><strong>Comparability:</strong> Consistency, Standard Methods</li>
+    <li><strong>Understandability:</strong> Clear Presentation and Format, Simple Language, Not too technical terms</li>
+  </ul>

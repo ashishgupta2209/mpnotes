@@ -1,0 +1,21 @@
+<h2>Economic Activity</h2>
+  <p>
+    An economic activity is a one-way or reciprocal transaction of value between two or more independent economic units.
+  </p>
+
+  <h3>Classification of Economic Activities</h3>
+  <p>
+    Economic activities are classified into three types based on the nature of value and income type:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Business:</strong> Economic activities in which goods and services are produced or purchased for the purpose of resale with the aim of earning profit are called business.
+    </li>
+    <li>
+      <strong>Profession:</strong> Economic activities in which a person provides services to others using specialized knowledge or training and receives a fee in return are called profession.
+    </li>
+    <li>
+      <strong>Employment:</strong> Economic activities in which an individual works under someone else (a person or organization) and receives a fixed wage or salary in return are called employment.
+    </li>
+  </ol>

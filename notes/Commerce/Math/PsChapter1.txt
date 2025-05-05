@@ -1,0 +1,4 @@
+ <h2>Set</h2>
+  <p>
+    A <strong>set</strong> is a well-defined collection of elements or objects such that any subject who understands the criterion can clearly decide whether any particular object belongs to the set or not, based on the available data.
+  </p>
