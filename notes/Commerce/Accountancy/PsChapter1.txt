@@ -1,22 +1,56 @@
-<h2>Transaction</h2>
+ <h2>Origin of Accounting</h2>
+  <p>
+    Luca Pacioli’s 1494 book, <i>Summa de Arithmetica</i>, was the first to explain double-entry bookkeeping,
+    introducing the concepts of debits, credits, ledgers, and balance sheets. It laid the foundation for modern accounting,
+    earning him the title <b>“Father of Accounting.”</b>
+  </p>
+
+  <p><b>Debit</b> ← Debito (Italian) ← Debeo (Latin) → “owed to someone.”</p>
+  <p><b>Credit</b> ← Credito (Italian) ← Credo (Latin) → “trust or belief.”</p>
+
+  <h2>Definition</h2>
+  <p>
+    <b>Accounting</b> is the process of identifying, measuring, recording and communicating the required information
+    relating to the economic events of an organisation to the interested users of such information.
+  </p>
+
+  <h2>Process or Constituents of Accounting</h2>
+
+  <h3>Transaction</h3>
   <p>
     A transaction is a transfer of a thing of value from one holder to another. <br>
     OR <br>
     A transaction is a value shift from one account to another that can be measured in monetary terms.
   </p>
 
+  <h3>Economic Events</h3>
+  <p>
+    An economic event is an event in a business organisation which is a transaction and can be measured in monetary terms.
+  </p>
+
+  <h3>Process of Accounting</h3>
+  <ol>
+    <li><b>Identifying:</b> Recognising financial transactions that affect the business.</li>
+    <li><b>Measuring:</b> Determining the value of the transaction in terms of money.</li>
+    <li><b>Recording:</b> Writing down every transaction in a place (Journal) in chronological order.</li>
+    <li><b>Classifying:</b> Organising transactions into different accounts.</li>
+    <li><b>Summarizing:</b> Grouping the organised information into simple reports.</li>
+    <li><b>Analyzing:</b> Examining the reports to understand the financial health and performance of business.</li>
+    <li><b>Communicating/Reporting:</b> Sharing the financial information (reports) with the interested users.</li>
+  </ol>
+
   <h2>Types of Accounting</h2>
   <ol>
     <li>
-      <strong>Financial Accounting:</strong> Financial accounting is accounting which deals with all financial transactions of a business in order to report the business's financial health. <br>
+      <b>Financial Accounting:</b> Financial accounting is accounting which deals with all financial transactions of a business in order to report the business's financial health. <br>
       OR <br>
       Financial Accounting is the process of recording, summarizing, and reporting a business's financial transactions to provide an accurate picture of its financial health.
     </li>
     <li>
-      <strong>Cost Accounting:</strong> Cost accounting is the process of tracking, recording, analyzing, and controlling costs associated with the production or acquiring of goods or services.
+      <b>Cost Accounting:</b> Cost accounting is the process of tracking, recording, analyzing, and controlling costs associated with the production or acquiring of goods or services.
     </li>
     <li>
-      <strong>Management Accounting:</strong> Management accounting is the process of collecting, analyzing, interpreting, and presenting financial and non-financial information to help managers make decisions, plan, control operations, and achieve business goals.
+      <b>Management Accounting:</b> Management accounting is the process of collecting, analyzing, interpreting, and presenting financial and non-financial information to help managers make decisions, plan, control operations, and achieve business goals.
     </li>
   </ol>
 
@@ -49,8 +83,99 @@
 
   <h2>Qualitative Characteristics of Accounting</h2>
   <ul>
-    <li><strong>Relevance:</strong> Timeliness, Materiality</li>
-    <li><strong>Reliability:</strong> Verifiability, Neutrality, Completeness</li>
-    <li><strong>Comparability:</strong> Consistency, Standard Methods</li>
-    <li><strong>Understandability:</strong> Clear Presentation and Format, Simple Language, Not too technical terms</li>
+    <li><b>Relevance:</b> Timeliness, Materiality</li>
+    <li><b>Reliability:</b> Verifiability, Neutrality, Completeness</li>
+    <li><b>Comparability:</b> Consistency, Standard Methods</li>
+    <li><b>Understandability:</b> Clear Presentation and Format, Simple Language, Not too technical terms</li>
   </ul>
+
+  <h2>Basic Accounting Terms</h2>
+
+  <h3>1. Entity</h3>
+  <p>Entity means a reality that has a definite individual existence. Business entity means a specifically identifiable business enterprise.</p>
+
+  <h3>2. Transaction</h3>
+  <p>A transaction is a transfer of a thing of value from one entity to another.</p>
+
+  <h3>3. Assets</h3>
+  <p>Economic resources owned by a business that can provide future benefits.</p>
+
+  <b>Types of Assets:</b>
+  <ul>
+    <li><b>Current Assets:</b> Expected to be converted into cash, sold, or consumed within 12 months or one business cycle.
+      <ul>
+        <li>Cash in hand</li>
+        <li>Bank balance</li>
+        <li>Accounts receivable (Debtors)</li>
+        <li>Inventory (Stock)</li>
+        <li>Bills receivable</li>
+        <li>Short-term investments</li>
+        <li>Prepaid expenses</li>
+      </ul>
+    </li>
+    <li><b>Non-Current Assets:</b> Assets not expected to be converted into cash or consumed within a year.
+      <ul>
+        <li>Land and building</li>
+        <li>Machinery</li>
+        <li>Furniture</li>
+        <li>Long-term investments</li>
+        <li>Patents, trademarks (Intangible assets)</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>4. Liabilities</h3>
+  <p>Obligations or debts that the business has to pay to outsiders.</p>
+
+  <ul>
+    <li><b>Current Liabilities:</b> Obligations payable within 12 months.
+      <ul>
+        <li>Creditors</li>
+        <li>Bills payable</li>
+        <li>Bank overdraft</li>
+        <li>Outstanding expenses (like unpaid rent/salary)</li>
+        <li>Short-term loans</li>
+        <li>Unearned revenue (received in advance)</li>
+      </ul>
+    </li>
+    <li><b>Non-Current Liabilities:</b> Obligations not due within one year.
+      <ul>
+        <li>Long-term loans from banks</li>
+        <li>Debentures</li>
+        <li>Mortgage loans</li>
+        <li>Deferred tax liabilities</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>5. Capital</h3>
+  <p>The amount invested by the owner in the business to start and run the operations.</p>
+
+  <h3>6. Drawings</h3>
+  <p>The amount of cash or goods withdrawn from the business by the owner for personal use.</p>
+
+  <h3>7. Revenue</h3>
+  <p>The amount received or receivable from the sale of goods and services or from other business activities.</p>
+
+  <h3>8. Sales</h3>
+  <p>Sales are total revenues from goods or services sold to customers.</p>
+
+  <h3>9. Expenditure</h3>
+  <p>Spending money or incurring a liability for receiving some benefit, service, or property is called expenditure.</p>
+
+  <ul>
+    <li><b>Revenue Expenditure:</b> Expenditure whose benefit is exhausted within a year.</li>
+    <li><b>Capital Expenditure:</b> Expenditure whose benefit lasts more than a year.</li>
+  </ul>
+
+  <h3>10. Expense</h3>
+  <p>Costs incurred by a business in the process of earning revenue.</p>
+
+  <h3>11. Profit</h3>
+  <p>The excess of revenue over expenses during an accounting period.</p>
+
+  <h3>12. Loss</h3>
+  <p>The excess of expenses over revenue during an accounting period.</p>
+
+  <h3>13. Gain</h3>
+  <p>A profit that arises from events or transactions which are incidental or non-recurring to business.</p>
