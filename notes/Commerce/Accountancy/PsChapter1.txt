@@ -39,6 +39,29 @@
     <li><b>Communicating/Reporting:</b> Sharing the financial information (reports) with the interested users.</li>
   </ol>
 
+  <h3>Interested Users of Accounting</h3>
+<p>Accounting information is useful to a wide range of people, commonly referred to as the users of accounting. These users may be categorized into two groups:</p>
+
+<ul>
+  <li><b>Internal Users:</b> These are individuals within the organization.
+    <ul>
+      <li><b>Owners:</b> To know the profitability and financial status.</li>
+      <li><b>Management:</b> For planning, controlling, and decision-making.</li>
+      <li><b>Employees:</b> To know about the company's stability and profitability for job security and future growth.</li>
+    </ul>
+  </li>
+  <li><b>External Users:</b> These are individuals or entities outside the organization.
+    <ul>
+      <li><b>Investors:</b> To assess the profitability and decide on investing.</li>
+      <li><b>Creditors/Lenders:</b> To evaluate the company’s creditworthiness.</li>
+      <li><b>Government:</b> To ensure proper tax compliance and regulations.</li>
+      <li><b>Consumers:</b> To check product pricing and ethical practices.</li>
+      <li><b>Researchers:</b> For economic and business studies.</li>
+      <li><b>Public:</b> To understand the impact of the company on the economy.</li>
+    </ul>
+  </li>
+</ul>
+
   <h2>Types of Accounting</h2>
   <ol>
     <li>
@@ -179,3 +202,47 @@
 
   <h3>13. Gain</h3>
   <p>A profit that arises from events or transactions which are incidental or non-recurring to business.</p>
+
+  <h3>14. Voucher</h3>
+  <p>A voucher is any documentary evidence that proves a transaction has occurred.</p>
+
+  <h3>15. Discount</h3>
+  <p>Discount is the deduction in the price of the goods sold. <br>
+  OR <br>
+  A deduction in the listed price of goods or in the amount payable is called a discount.</p>
+
+  <ul>
+    <li><b>Trade Discount:</b> Given at the time of sale based on the list price.<br>
+      • Not shown in the books of accounts.<br>
+      • Given by manufacturers to wholesalers, or wholesalers to retailers.<br>
+      • <i>Example:</i> A ₹10,000 TV sold with 10% trade discount → invoice amount becomes ₹9,000.
+    </li>
+    <li><b>Cash Discount:</b> Given at the time of payment, especially when payment is made early or within a   stipulated period.</li>
+  </ul>
+
+  <h3>16. Goods</h3>
+  <p>Goods are the products or items in which the business regularly deals — that is, what it buys or produces and  sells.</p>
+
+  <h3>17. Purchases</h3>
+  <p>Purchases refer to the total amount of goods procured by a business (either in cash or on credit).</p>
+
+  <h3>18. Stock</h3>
+  <p>Stock (also called inventory) refers to the goods or items that a business holds on hand for sale or   production at any given time.</p>
+
+  <ul>
+    <li><b>Opening Stock:</b> Stock at the beginning of the year</li>
+    <li><b>Closing Stock:</b> Stock at the end of the year</li>
+  </ul>
+
+  <p><b>Types of Stock (in a manufacturing business):</b></p>
+  <ul>
+    <li>Raw Materials</li>
+    <li>Work-in-Progress (WIP)</li>
+    <li>Finished Goods</li>
+  </ul>
+
+  <h3>19. Debtors</h3>
+  <p>Debtors are people or businesses who owe money to the enterprise, usually because they bought goods or   services on credit.</p>
+
+  <h3>20. Creditors</h3>
+  <p>Creditors are people or businesses to whom the enterprise owes money, usually for purchasing goods or services   on credit.</p>
